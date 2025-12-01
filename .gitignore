@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+*.local
+.env.local
+.env
+.env.*.local
+# Vite / build artifacts inside subprojects
+pwa-client/node_modules/
+pwa-client/dist/
+# Editor junk
+.vscode/
+.idea/
+
