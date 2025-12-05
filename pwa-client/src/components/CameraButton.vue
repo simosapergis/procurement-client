@@ -10,7 +10,8 @@
     />
     <button
       type="button"
-      class="flex w-full items-center justify-center rounded-xl bg-primary-600 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700"
+      class="flex w-full items-center justify-center rounded-xl bg-primary-600 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+      :disabled="disabled"
       @click="openPicker"
     >
       <slot>Use Camera or Upload</slot>
@@ -21,10 +22,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const props = withDefaults(defineProps<{ disabled?: boolean }>(), {
+  disabled: false,
+});
+
 const emit = defineEmits<{ (e: 'select', file: File): void }>();
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const openPicker = () => {
+  if (props.disabled) return;
   fileInput.value?.click();
 };
 

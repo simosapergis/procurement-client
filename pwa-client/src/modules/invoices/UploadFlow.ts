@@ -1,47 +1,74 @@
-import type { Invoice, InvoiceQuality } from './InvoiceMapper';
-import { mapInvoice } from './InvoiceMapper';
+import type { SignedUrlResponse } from '@/services/api/requestSignedUrl';
+import type { ImageQualityReport } from '@/utils/image';
 import { extractFileExtension } from '@/utils/file';
+import { createUUID } from '@/utils/uuid';
 
 interface UploadDependencies {
-  detectQuality: (file: File) => Promise<InvoiceQuality>;
-  generateInvoiceId: () => string;
-  detectSupplier: (file: File) => Promise<{
-    name: string;
-    amountHint?: number;
-    currency?: string;
-  } | null>;
-  mapInvoice: typeof mapInvoice;
-  requestSignedUrl: (payload: { filename: string; contentType: string; folder?: string }) => Promise<{
-    uploadUrl: string;
-    fileUrl: string;
-    headers?: Record<string, string>;
-  }>;
+  detectQuality: (file: File) => Promise<ImageQualityReport>;
+  requestSignedUrl: (payload: {
+    filename: string;
+    contentType: string;
+    pageNumber: number;
+    totalPages?: number;
+    invoiceId?: string;
+    folder?: string;
+  }) => Promise<SignedUrlResponse>;
+}
+
+export interface UploadPageInput {
+  file: File;
+  pageNumber: number;
+  totalPages?: number;
+  invoiceId?: string;
+  quality?: ImageQualityReport;
+  onProgress?: (progress: number) => void;
+}
+
+export interface UploadPageResult {
+  invoiceId: string;
+  pageNumber: number;
+  totalPages?: number;
+  bucket?: string;
+  objectName?: string;
+  fileUrl: string;
+  expiresAt?: string;
+  quality: ImageQualityReport;
 }
 
 export class UploadFlow {
   constructor(private readonly deps: UploadDependencies) {}
 
-  async run(file: File, onProgress?: (progress: number) => void): Promise<Invoice> {
-    onProgress?.(10);
-    const quality = await this.deps.detectQuality(file);
+  async uploadPage(options: UploadPageInput): Promise<UploadPageResult> {
+    const { file, pageNumber, totalPages, invoiceId, onProgress } = options;
+
+    onProgress?.(5);
+    const quality =
+      options.quality ??
+      (await this.deps.detectQuality(file).catch((error) => {
+        throw error instanceof Error ? error : new Error('Quality check failed');
+      }));
+
     if (!quality.accepted) {
       throw new Error(quality.reasons[0] ?? 'Quality check failed');
     }
 
-    onProgress?.(30);
-    const invoiceId = this.deps.generateInvoiceId();
+    onProgress?.(35);
     const extension = extractFileExtension(file.name) || 'jpg';
-    const filename = `${invoiceId}.${extension}`;
+    const filename = `${Date.now()}-${pageNumber}-${createUUID()}.${extension}`;
+
     const signed = await this.deps.requestSignedUrl({
       filename,
       contentType: file.type || 'image/jpeg',
+      pageNumber,
+      ...(typeof totalPages === 'number' ? { totalPages } : {}),
+      ...(invoiceId ? { invoiceId } : {}),
     });
 
-    onProgress?.(60);
+    onProgress?.(70);
     const uploadResponse = await fetch(signed.uploadUrl, {
       method: 'PUT',
       headers: {
-        'Content-Type': file.type,
+        'Content-Type': file.type || 'image/jpeg',
         ...(signed.headers ?? {}),
       },
       body: file,
@@ -51,20 +78,17 @@ export class UploadFlow {
       throw new Error('Upload to signed URL failed');
     }
 
-    onProgress?.(85);
-    const supplier = await this.deps.detectSupplier(file);
-    const invoice = this.deps.mapInvoice({
-      id: invoiceId,
-      supplierName: supplier?.name,
-      amount: supplier?.amountHint ?? 0,
-      currency: supplier?.currency ?? 'USD',
-      quality,
-      status: 'processing',
-      statusMessage: 'Uploaded and waiting for processing',
-      fileUrl: signed.fileUrl,
-    });
-
     onProgress?.(100);
-    return invoice;
+
+    return {
+      invoiceId: signed.invoiceId,
+      pageNumber: signed.pageNumber ?? pageNumber,
+      totalPages: signed.totalPages ?? totalPages,
+      bucket: signed.bucket,
+      objectName: signed.objectName,
+      fileUrl: signed.fileUrl,
+      expiresAt: signed.expiresAt,
+      quality,
+    };
   }
 }
