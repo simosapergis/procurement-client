@@ -9,7 +9,13 @@ export const useUiStore = defineStore('ui', {
   actions: {
     pushToast(toast: NotificationMessage) {
       this.toasts.push(toast);
-      setTimeout(() => this.removeToast(toast.id), toast.timeout);
+      const id = toast.id;
+      const timeout = toast.timeout ?? 4000;
+      if (timeout > 0) {
+        setTimeout(() => {
+          this.toasts = this.toasts.filter((t) => t.id !== id);
+        }, timeout);
+      }
     },
     removeToast(id?: string) {
       if (!id) return;
