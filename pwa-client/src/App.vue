@@ -4,6 +4,7 @@
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <RouterLink to="/" class="text-lg font-semibold text-primary-600">Invoice Uploader</RouterLink>
         <nav class="flex gap-4 text-sm font-medium text-slate-600">
+          <RouterLink to="/overview" class="hover:text-primary-600">Επισκόπηση</RouterLink>
           <RouterLink to="/upload" class="hover:text-primary-600">Upload</RouterLink>
           <RouterLink to="/invoices" class="hover:text-primary-600">Invoices</RouterLink>
           <RouterLink to="/suppliers" class="hover:text-primary-600">Suppliers</RouterLink>

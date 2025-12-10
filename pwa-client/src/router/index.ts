@@ -6,6 +6,7 @@ import UploadPage from '@/pages/UploadPage.vue';
 import InvoicesListPage from '@/pages/InvoicesListPage.vue';
 import InvoiceDetailsPage from '@/pages/InvoiceDetailsPage.vue';
 import SuppliersPage from '@/pages/SuppliersPage.vue';
+import OverviewPage from '@/pages/OverviewPage.vue';
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: HomePage },
@@ -14,6 +15,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/invoices', name: 'invoices', component: InvoicesListPage },
   { path: '/invoices/:id', name: 'invoice-details', component: InvoiceDetailsPage, props: true },
   { path: '/suppliers', name: 'suppliers', component: SuppliersPage },
+  { path: '/overview', name: 'overview', component: OverviewPage },
 ];
 
 const router = createRouter({

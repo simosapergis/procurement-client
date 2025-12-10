@@ -1,6 +1,7 @@
 import {
   getFirestore,
   collection,
+  collectionGroup,
   doc,
   setDoc,
   getDocs,
@@ -8,6 +9,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
 } from 'firebase/firestore';
 
 import { firebaseApp } from '@/services/firebase';
@@ -75,5 +77,28 @@ export function useFirestore() {
     });
   };
 
-  return { saveInvoiceRecord, fetchInvoices, fetchSuppliers, fetchSupplierInvoices, fetchSupplierInvoice, subscribeToInvoice };
+  const fetchUnpaidInvoices = async (): Promise<Invoice[]> => {
+    console.info('[Firestore] querying unpaid invoices (collectionGroup)');
+    const q = query(
+      collectionGroup(db, 'invoices'),
+      where('paymentStatus', 'in', ['unpaid', 'partially_paid'])
+    );
+    const snapshot = await getDocs(q);
+    const invoices = snapshot.docs.map((docSnapshot) => ({
+      ...(docSnapshot.data() as Invoice),
+      id: docSnapshot.id,
+    }));
+    console.info('[Firestore] fetched unpaid invoices', invoices.length);
+    return invoices;
+  };
+
+  return {
+    saveInvoiceRecord,
+    fetchInvoices,
+    fetchSuppliers,
+    fetchSupplierInvoices,
+    fetchSupplierInvoice,
+    fetchUnpaidInvoices,
+    subscribeToInvoice,
+  };
 }
