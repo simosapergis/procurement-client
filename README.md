@@ -1,2 +1,7 @@
 # procurement-client
 A smart procurement &amp; invoicing automation platform for small and medium businesses.
+
+# set cors for bucket upload if not set already
+# edit configuration in cors.json - add IP or Host name to enable CORS 
+gsutil cors set cors.json gs://level-approach-479119-b3.firebasestorage.app
+gsutil cors get gs://level-approach-479119-b3.firebasestorage.app
