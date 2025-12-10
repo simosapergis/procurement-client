@@ -1,8 +1,13 @@
 [
   {
-    "origin": ["http://localhost:5173"],
+    "origin": [
+      "http://localhost:5173",
+      "https://level-approach-479119-b3.web.app",
+      "https://level-approach-479119-b3.firebaseapp.com"
+    ],
     "method": ["GET", "PUT", "POST", "HEAD", "OPTIONS"],
     "responseHeader": ["Content-Type", "Authorization"],
     "maxAgeSeconds": 3600
   }
 ]
+
