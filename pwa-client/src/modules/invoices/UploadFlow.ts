@@ -38,7 +38,7 @@ export interface UploadPageResult {
 export class UploadFlow {
   constructor(private readonly deps: UploadDependencies) {}
 
-async uploadPage(options: UploadPageInput): Promise<UploadPageResult> {
+  async uploadPage(options: UploadPageInput): Promise<UploadPageResult> {
     const { file, pageNumber, totalPages, invoiceId, onProgress } = options;
 
     onProgress?.(5);
@@ -56,7 +56,6 @@ async uploadPage(options: UploadPageInput): Promise<UploadPageResult> {
     const extension = extractFileExtension(file.name) || 'jpg';
     const filename = `${Date.now()}-${pageNumber}-${createUUID()}.${extension}`;
 
-    console.info('[UploadFlow] quality ok', { pageNumber, totalPages, invoiceId, filename, type: file.type, size: file.size });
     const signed = await this.deps.requestSignedUrl({
       filename,
       contentType: file.type || 'image/jpeg',
@@ -76,12 +75,7 @@ async uploadPage(options: UploadPageInput): Promise<UploadPageResult> {
     });
 
     if (!uploadResponse.ok) {
-      const body = await uploadResponse.text().catch(() => '');
-      throw new Error(
-        `Upload to signed URL failed (${uploadResponse.status} ${uploadResponse.statusText}) ${
-          body ? `- ${body.slice(0, 200)}` : ''
-        }`
-      );
+      throw new Error('Upload to signed URL failed');
     }
 
     onProgress?.(100);

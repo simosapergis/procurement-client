@@ -17,11 +17,13 @@ export interface Invoice {
   invoiceDate?: string;
   dueDate?: string;
   totalAmount?: number;
+  unpaidAmount?: number;
   netAmount?: number;
   vatAmount?: number;
   vatRate?: number;
   currency: string;
   status: InvoiceStatus;
+  paymentStatus?: 'paid' | 'unpaid' | 'partially_paid';
   statusMessage?: string;
   errorMessage?: string | null;
   confidence?: number | null;
@@ -50,7 +52,8 @@ export const mapInvoice = (payload: InvoicePayload): Invoice => ({
   invoiceNumber: payload.invoiceNumber,
   invoiceDate: payload.invoiceDate,
   dueDate: payload.dueDate,
-  totalAmount: payload.totalAmount ?? payload.amount ?? 0,
+  totalAmount: payload.totalAmount ?? 0,
+  unpaidAmount: payload.unpaidAmount,
   netAmount: payload.netAmount,
   vatAmount: payload.vatAmount,
   vatRate: payload.vatRate,
@@ -60,6 +63,7 @@ export const mapInvoice = (payload: InvoicePayload): Invoice => ({
   rawFilePaths: payload.rawFilePaths ?? [],
   filePath: payload.filePath,
   status: payload.status ?? 'processing',
+  paymentStatus: payload.paymentStatus,
   statusMessage: payload.statusMessage ?? payload.errorMessage ?? 'Queued for extraction',
   errorMessage: payload.errorMessage ?? null,
   confidence: payload.confidence ?? null,

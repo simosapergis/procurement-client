@@ -54,11 +54,25 @@
         {{ invoiceError }}
       </p>
       <div v-else class="grid gap-4 md:grid-cols-2">
-        <InvoicePreviewCard v-for="invoice in supplierInvoices" :key="invoice.id" :invoice="invoice" />
+        <InvoicePreviewCard
+          v-for="invoice in supplierInvoices"
+          :key="invoice.id"
+          :invoice="invoice"
+          @select="selectInvoice"
+        />
       </div>
       <p v-if="!invoiceLoading && supplierInvoices.length === 0" class="mt-4 text-sm text-slate-500">
         No invoices found for this supplier.
       </p>
+
+      <!-- Invoice Detail View -->
+      <Loader v-if="detailLoading" class="mt-6" label="Loading invoice details..." />
+      <InvoiceDetailView
+        v-else-if="selectedInvoice"
+        class="mt-6"
+        :invoice="selectedInvoice"
+        @close="clearInvoiceSelection"
+      />
     </section>
   </section>
 </template>
@@ -66,16 +80,23 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 
+import InvoiceDetailView from '@/components/InvoiceDetailView.vue';
 import InvoicePreviewCard from '@/components/InvoicePreviewCard.vue';
 import Loader from '@/components/Loader.vue';
 import SupplierCard from '@/components/SupplierCard.vue';
+import { useFirestore } from '@/composables/useFirestore';
 import { useSupplierInvoices } from '@/composables/useSupplierInvoices';
 import { useSuppliers } from '@/composables/useSuppliers';
+import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 
 const { suppliers, loading, error, hydrate } = useSuppliers();
 const { invoices: supplierInvoices, loading: invoiceLoading, error: invoiceError, loadInvoices } =
   useSupplierInvoices();
+const { fetchSupplierInvoice } = useFirestore();
+
 const activeSupplierId = ref<string | null>(null);
+const selectedInvoice = ref<Invoice | null>(null);
+const detailLoading = ref(false);
 
 onMounted(async () => {
   await hydrate();
@@ -96,6 +117,24 @@ const selectSupplier = async (supplierId: string) => {
 const clearSelection = () => {
   activeSupplierId.value = null;
   supplierInvoices.value = [];
+  selectedInvoice.value = null;
+};
+
+const selectInvoice = async (invoiceId: string) => {
+  if (!activeSupplierId.value) return;
+  detailLoading.value = true;
+  selectedInvoice.value = null;
+  try {
+    selectedInvoice.value = await fetchSupplierInvoice(activeSupplierId.value, invoiceId);
+  } catch (err) {
+    console.error('[SuppliersPage] failed to fetch invoice', err);
+  } finally {
+    detailLoading.value = false;
+  }
+};
+
+const clearInvoiceSelection = () => {
+  selectedInvoice.value = null;
 };
 </script>
 

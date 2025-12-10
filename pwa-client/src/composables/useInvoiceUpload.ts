@@ -161,32 +161,19 @@ export function useInvoiceUpload() {
 
       page.status = 'uploading';
       page.progress = 0;
-      let innerError = '';
 
       try {
         const includeTotalPages = !invoiceId && !invoiceIdSeed && page.pageNumber === 1 ? totalPages.value : undefined;
-        let result;
-       
-        try {
-          result = await uploadFlow.uploadPage({
-            file: page.file,
-            pageNumber: page.pageNumber,
-            totalPages: includeTotalPages ?? undefined,
-            invoiceId: invoiceId ?? invoiceIdSeed ?? undefined,
-            quality: page.quality,
-            onProgress(progress) {
-              page.progress = Math.round(progress);
-            },
-          });
-        } catch (innerErr) {
-          innerError =
-            innerErr instanceof Error && innerErr.message.trim().length > 0
-              ? innerErr.message
-              : 'Unknown upload error';
-          throw new Error(innerError);
-        }
-
-        console.info('[Upload] page uploaded', { pageNumber: page.pageNumber, invoiceId: result.invoiceId, result });
+        const result = await uploadFlow.uploadPage({
+          file: page.file,
+          pageNumber: page.pageNumber,
+          totalPages: includeTotalPages ?? undefined,
+          invoiceId: invoiceId ?? invoiceIdSeed ?? undefined,
+          quality: page.quality,
+          onProgress(progress) {
+            page.progress = Math.round(progress);
+          },
+        });
 
         invoiceId = result.invoiceId;
         activeInvoiceId.value = result.invoiceId;
@@ -195,22 +182,14 @@ export function useInvoiceUpload() {
         page.result = result;
         uploadsLog.value.push(result);
 
-        notifySuccess(
-          `Uploaded page ${result.pageNumber} of ${result.totalPages ?? totalPages.value}. Invoice: ${result.invoiceId}`
-        );
+        notifySuccess(`Uploaded page ${result.pageNumber} of ${result.totalPages ?? totalPages.value}.`);
       } catch (err) {
-        const rawMessage =
-          err instanceof Error && err.message.trim().length > 0 ? err.message : 'Unknown error';
-        const cleanedMessage = rawMessage.replace(/^Load failed:\s*/i, '').trim();
-        const fileInfo = `${page.name} (${page.file.type || 'unknown type'})`;
-        const finalMessage = cleanedMessage
-          ? `Load failed: ${cleanedMessage} | File: ${fileInfo} | Invoice: ${invoiceId ?? 'n/a'}${innerError ? ` | Inner: ${innerError}` : ''}`
-          : `Load failed | File: ${fileInfo} | Invoice: ${invoiceId ?? 'n/a'}${innerError ? ` | Inner: ${innerError}` : ''}`;
+        const message = err instanceof Error ? err.message : 'Upload failed';
         page.status = 'error';
-        page.error = finalMessage;
+        page.error = message;
         status.value = 'error';
-        error.value = finalMessage;
-        notifyError(finalMessage);
+        error.value = message;
+        notifyError(message);
         return;
       }
     }

@@ -45,7 +45,7 @@ const invoiceId = route.params.id as string;
 
 const { getInvoiceById, watchInvoice } = useInvoiceStatus();
 const invoice = computed(() => getInvoiceById(invoiceId));
-const formattedDate = computed(() => formatDateTime(invoice.value?.uploadedAt));
+const formattedDate = computed(() => formatDateTime(invoice.value?.uploadedAt ?? invoice.value?.processedAt));
 
 const unsubscribe = watchInvoice(invoiceId);
 onUnmounted(() => unsubscribe?.());

@@ -4,9 +4,10 @@ import {
   doc,
   setDoc,
   getDocs,
+  getDoc,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
 } from 'firebase/firestore';
 
 import { firebaseApp } from '@/services/firebase';
@@ -46,9 +47,23 @@ export function useFirestore() {
     console.info('[Firestore] querying collection', collectionPath);
     const invoicesCollection = collection(db, collectionPath);
     const snapshot = await getDocs(invoicesCollection);
-    const invoices = snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...(docSnapshot.data() as Invoice) }));
+    const invoices = snapshot.docs.map((docSnapshot) => ({ ...(docSnapshot.data() as Invoice), id: docSnapshot.id }));
     console.info('[Firestore] fetched supplier invoices', supplierId, invoices.length);
     return invoices;
+  };
+
+  const fetchSupplierInvoice = async (supplierId: string, invoiceId: string): Promise<Invoice | null> => {
+    const docPath = `suppliers/${supplierId}/invoices/${invoiceId}`;
+    console.info('[Firestore] fetching document', docPath);
+    const invoiceDoc = doc(db, docPath);
+    const snapshot = await getDoc(invoiceDoc);
+    if (!snapshot.exists()) {
+      console.info('[Firestore] document not found', docPath);
+      return null;
+    }
+    const invoice = { ...(snapshot.data() as Invoice), id: snapshot.id };
+    console.info('[Firestore] fetched supplier invoice', invoice.id);
+    return invoice;
   };
 
   const subscribeToInvoice = (id: string, callback: (invoice: Invoice) => void) => {
@@ -60,5 +75,5 @@ export function useFirestore() {
     });
   };
 
-  return { saveInvoiceRecord, fetchInvoices, fetchSuppliers, fetchSupplierInvoices, subscribeToInvoice };
+  return { saveInvoiceRecord, fetchInvoices, fetchSuppliers, fetchSupplierInvoices, fetchSupplierInvoice, subscribeToInvoice };
 }

@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-type Status = 'pending' | 'processing' | 'uploaded' | 'failed' | 'paid' | 'unpaid' | 'partially_paid';
+type Status = 'pending' | 'processing' | 'uploaded' | 'completed' | 'failed' | 'paid' | 'unpaid' | 'partially_paid';
 
 const props = defineProps<{ status: Status }>();
 
@@ -13,6 +13,7 @@ const labelMap: Record<Status, string> = {
   pending: 'Σε αναμονή',
   processing: 'Σε επεξεργασία',
   uploaded: 'Μεταφορτώθηκε',
+  completed: 'Ολοκληρώθηκε',
   failed: 'Αποτυχία Μεταφόρτωσης',
   paid: 'Εξωφλημένο',
   unpaid: 'Μη εξωφλημένο',
@@ -23,6 +24,7 @@ const colors: Record<Status, string> = {
   pending: 'bg-amber-100 text-amber-700',
   processing: 'bg-sky-100 text-sky-700',
   uploaded: 'bg-emerald-100 text-emerald-700',
+  completed: 'bg-emerald-100 text-emerald-700',
   failed: 'bg-rose-100 text-rose-700',
   paid: 'bg-emerald-100 text-emerald-700',
   unpaid: 'bg-rose-100 text-rose-700',

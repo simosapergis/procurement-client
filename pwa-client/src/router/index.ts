@@ -1,5 +1,4 @@
-import { createRouter, createWebHistory, type NavigationGuardNext, type RouteLocationNormalized, type RouteRecordRaw } from 'vue-router';
-import { getAuth } from 'firebase/auth';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
 import HomePage from '@/pages/HomePage.vue';
 import LoginPage from '@/pages/LoginPage.vue';
@@ -7,7 +6,6 @@ import UploadPage from '@/pages/UploadPage.vue';
 import InvoicesListPage from '@/pages/InvoicesListPage.vue';
 import InvoiceDetailsPage from '@/pages/InvoiceDetailsPage.vue';
 import SuppliersPage from '@/pages/SuppliersPage.vue';
-import { firebaseApp } from '@/services/firebase';
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: HomePage },
@@ -21,23 +19,6 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-});
-
-const auth = getAuth(firebaseApp);
-
-router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  if (to.name === 'login') {
-    next();
-    return;
-  }
-
-  const isAuthed = !!auth.currentUser;
-  if (!isAuthed) {
-    next({ name: 'login', query: { redirect: to.fullPath } });
-    return;
-  }
-
-  next();
 });
 
 export default router;

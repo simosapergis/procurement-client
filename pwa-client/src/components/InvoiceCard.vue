@@ -5,7 +5,7 @@
   >
     <header class="flex items-center justify-between">
       <h3 class="text-base font-semibold text-slate-900">{{ props.invoice.supplierName }}</h3>
-      <StatusBadge :status="props.invoice.paymentStatus" />
+      <StatusBadge :status="props.invoice.paymentStatus ?? props.invoice.status" />
     </header>
     <p class="mt-2 text-sm text-slate-500">
       Invoice {{ props.invoice.invoiceNumber ?? props.invoice.invoiceId ?? props.invoice.id }}
