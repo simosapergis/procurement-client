@@ -31,12 +31,15 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/useAuth';
 import { useNotifications } from '@/composables/useNotifications';
 
 const { loginWithEmail } = useAuth();
 const { notifySuccess, notifyError } = useNotifications();
+const route = useRoute();
+const router = useRouter();
 
 const state = reactive({
   email: '',
@@ -51,6 +54,8 @@ const handleSubmit = async () => {
   try {
     await loginWithEmail(state.email, state.password);
     notifySuccess('Signed in successfully');
+    const redirectPath = (route.query.redirect as string) || '/';
+    router.replace(redirectPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to sign in';
     state.error = message;

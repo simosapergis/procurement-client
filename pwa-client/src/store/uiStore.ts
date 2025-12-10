@@ -8,8 +8,15 @@ export const useUiStore = defineStore('ui', {
   }),
   actions: {
     pushToast(toast: NotificationMessage) {
-      this.toasts.push(toast);
-      setTimeout(() => this.removeToast(toast.id), toast.timeout);
+      const duration = Number.isFinite(toast.timeout) ? Number(toast.timeout) : 5000;
+      const normalized: NotificationMessage = {
+        ...toast,
+        timeout: duration > 0 ? duration : 0,
+      };
+      this.toasts.push(normalized);
+      if (normalized.timeout > 0) {
+        setTimeout(() => this.removeToast(normalized.id), normalized.timeout);
+      }
     },
     removeToast(id?: string) {
       if (!id) return;

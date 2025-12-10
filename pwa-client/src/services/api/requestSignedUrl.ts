@@ -34,6 +34,14 @@ export const requestSignedUrl = async (payload: SignedUrlRequest): Promise<Signe
     throw new Error('User must be signed in to request uploads');
   }
 
+  console.info('[SignedUrl] requesting URL', {
+    filename: payload.filename,
+    contentType: payload.contentType,
+    pageNumber: payload.pageNumber,
+    totalPages: payload.totalPages,
+    invoiceId: payload.invoiceId,
+  });
+
   const token = await user.getIdToken();
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -52,8 +60,13 @@ export const requestSignedUrl = async (payload: SignedUrlRequest): Promise<Signe
   });
 
   if (!response.ok) {
-    throw new Error('Failed to request signed URL');
+    const body = await response.text().catch(() => '');
+    throw new Error(
+      `Failed to request signed URL (${response.status} ${response.statusText}) ${body ? `- ${body.slice(0, 200)}` : ''}`
+    );
   }
 
-  return response.json();
+  const json = await response.json();
+  console.info('[SignedUrl] received', json);
+  return json;
 };

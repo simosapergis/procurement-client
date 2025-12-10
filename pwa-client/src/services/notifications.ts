@@ -23,7 +23,7 @@ export const notify = (payload: NotificationPayload): NotificationMessage => {
     id: payload.id ?? createUUID(),
     message: payload.message,
     type: payload.type ?? 'info',
-    timeout: payload.timeout ?? 4000,
+    timeout: payload.timeout ?? 5000,
   };
   subscribers.forEach((listener) => listener(message));
   return message;
