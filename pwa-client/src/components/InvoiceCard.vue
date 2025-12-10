@@ -5,7 +5,7 @@
   >
     <header class="flex items-center justify-between">
       <h3 class="text-base font-semibold text-slate-900">{{ props.invoice.supplierName }}</h3>
-      <StatusBadge :status="props.invoice.status" />
+      <StatusBadge :status="props.invoice.paymentStatus" />
     </header>
     <p class="mt-2 text-sm text-slate-500">
       Invoice {{ props.invoice.invoiceNumber ?? props.invoice.invoiceId ?? props.invoice.id }}
@@ -36,9 +36,8 @@ import { formatDateTime } from '@/utils/date';
 const props = defineProps<{ invoice: Invoice }>();
 const emit = defineEmits<{ (e: 'select', invoiceId: string): void }>();
 
-const formattedDate = computed(() => formatDateTime(props.invoice.uploadedAt));
+const formattedDate = computed(() => formatDateTime(props.invoice.uploadedAt ?? props.invoice.processedAt));
 const invoiceDate = computed(() => formatDateTime(props.invoice.invoiceDate));
 const totalAmount = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
-
 const handleClick = () => emit('select', props.invoice.id);
 </script>

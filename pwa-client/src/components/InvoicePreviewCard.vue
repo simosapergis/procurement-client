@@ -7,7 +7,7 @@
           {{ invoice.invoiceNumber ?? invoice.invoiceId ?? invoice.id }}
         </h3>
       </div>
-      <StatusBadge :status="invoice.status" />
+      <StatusBadge :status="invoice.paymentStatus" />
     </header>
     <p class="mt-3 text-sm text-slate-500">
       {{ invoice.currency }} {{ totalAmount }}
@@ -28,7 +28,6 @@ import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import { formatDateTime } from '@/utils/date';
 
 const props = defineProps<{ invoice: Invoice }>();
-
 const formattedDate = computed(() => formatDateTime(props.invoice.uploadedAt));
 const invoiceDate = computed(() => formatDateTime(props.invoice.invoiceDate));
 const totalAmount = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
