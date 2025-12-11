@@ -28,6 +28,13 @@
       </div>
 
       <div class="rounded-xl bg-white p-4 shadow-sm">
+        <dt class="text-xs uppercase tracking-wide text-slate-400">Supplier Tax Number</dt>
+        <dd class="mt-1 text-lg font-semibold text-slate-900">
+          {{ invoice.supplierTaxNumber ?? '—' }}
+        </dd>
+      </div>
+
+      <div class="rounded-xl bg-white p-4 shadow-sm">
         <dt class="text-xs uppercase tracking-wide text-slate-400">Invoice Number</dt>
         <dd class="mt-1 text-lg font-semibold text-slate-900">
           {{ invoice.invoiceNumber ?? '—' }}
@@ -62,6 +69,13 @@
         </dd>
       </div>
 
+      <div class="rounded-xl bg-white p-4 shadow-sm">
+        <dt class="text-xs uppercase tracking-wide text-slate-400">VAT Amount</dt>
+        <dd class="mt-1 text-lg font-semibold text-slate-900">
+          {{ invoice.currency ?? 'EUR' }} {{ formattedVat }}
+        </dd>
+      </div>
+
       <div class="rounded-xl bg-white p-4 shadow-sm sm:col-span-2">
         <dt class="text-xs uppercase tracking-wide text-slate-400">File Path</dt>
         <dd class="mt-1 truncate text-sm font-medium text-slate-700" :title="invoice.filePath">
@@ -85,9 +99,15 @@ const formattedUploadedAt = computed(() => formatDateTime(props.invoice.uploaded
 const formattedTotal = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
 const formattedUnpaid = computed(() => (props.invoice.unpaidAmount ?? 0).toFixed(2));
 const formattedNet = computed(() => (props.invoice.netAmount ?? 0).toFixed(2));
+const formattedVat = computed(() => (props.invoice.vatAmount ?? 0).toFixed(2));
 
 const unpaidColor = computed(() =>
   (props.invoice.unpaidAmount ?? 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
 );
 </script>
+
+
+
+
+
 
