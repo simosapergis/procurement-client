@@ -6,18 +6,14 @@
       <p class="mt-1 text-sm text-slate-500">Ανεξόφλητα και μερικώς εξοφλημένα τιμολόγια</p>
     </header>
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <div class="mb-6 grid gap-4 sm:grid-cols-2">
       <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-wide text-slate-400">Σύνολο τιμολογίων</p>
+        <p class="text-xs tracking-wide text-slate-400">Σύνολο Τιμολογίων</p>
         <p class="mt-1 text-3xl font-bold text-slate-900">{{ invoices.length }}</p>
       </div>
       <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-wide text-slate-400">Συνολικό ποσό</p>
+        <p class="text-xs tracking-wide text-slate-400">Σύνολο Υπολοίπων</p>
         <p class="mt-1 text-3xl font-bold text-slate-900">€ {{ totalAmount }}</p>
-      </div>
-      <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-wide text-slate-400">Ανεξόφλητο ποσό</p>
-        <p class="mt-1 text-3xl font-bold text-amber-600">€ {{ totalUnpaid }}</p>
       </div>
     </div>
 
@@ -48,7 +44,10 @@
             Ανεξόφλητο: {{ invoice.currency ?? 'EUR' }} {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
           </p>
         </div>
-        <StatusBadge class="ml-4" :status="invoice.paymentStatus ?? invoice.status" />
+        <div class="ml-4 flex items-center gap-2">
+          <ExpiryBadge :invoice-date="invoice.invoiceDate" />
+          <StatusBadge :status="invoice.paymentStatus ?? invoice.status" />
+        </div>
       </article>
     </div>
 
@@ -61,6 +60,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 
+import ExpiryBadge from '@/components/ExpiryBadge.vue';
 import Loader from '@/components/Loader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useFirestore } from '@/composables/useFirestore';
@@ -74,10 +74,6 @@ const error = ref<string | null>(null);
 
 const totalAmount = computed(() =>
   invoices.value.reduce((sum, inv) => sum + (inv.totalAmount ?? 0), 0).toFixed(2)
-);
-
-const totalUnpaid = computed(() =>
-  invoices.value.reduce((sum, inv) => sum + (inv.unpaidAmount ?? 0), 0).toFixed(2)
 );
 
 onMounted(async () => {

@@ -6,7 +6,6 @@
         <nav class="flex gap-4 text-sm font-medium text-slate-600">
           <RouterLink to="/overview" class="hover:text-primary-600">Επισκόπηση</RouterLink>
           <RouterLink to="/upload" class="hover:text-primary-600">Upload</RouterLink>
-          <RouterLink to="/invoices" class="hover:text-primary-600">Invoices</RouterLink>
           <RouterLink to="/suppliers" class="hover:text-primary-600">Suppliers</RouterLink>
           <RouterLink to="/login" class="hover:text-primary-600">Login</RouterLink>
         </nav>

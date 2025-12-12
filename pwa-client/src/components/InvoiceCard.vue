@@ -5,7 +5,10 @@
   >
     <header class="flex items-center justify-between">
       <h3 class="text-base font-semibold text-slate-900">{{ props.invoice.supplierName }}</h3>
-      <StatusBadge :status="props.invoice.paymentStatus ?? props.invoice.status" />
+      <div class="flex items-center gap-2">
+        <ExpiryBadge :invoice-date="props.invoice.invoiceDate" />
+        <StatusBadge :status="props.invoice.paymentStatus ?? props.invoice.status" />
+      </div>
     </header>
     <p class="mt-2 text-sm text-slate-500">
       Invoice {{ props.invoice.invoiceNumber ?? props.invoice.invoiceId ?? props.invoice.id }}
@@ -29,6 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import ExpiryBadge from './ExpiryBadge.vue';
 import StatusBadge from './StatusBadge.vue';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import { formatDateTime } from '@/utils/date';
