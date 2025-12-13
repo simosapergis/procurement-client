@@ -7,9 +7,15 @@
     </header>
 
     <div class="mb-6 grid gap-4 sm:grid-cols-2">
-      <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-xs tracking-wide text-slate-400">Σύνολο Τιμολογίων</p>
-        <p class="mt-1 text-3xl font-bold text-slate-900">{{ invoices.length }}</p>
+      <div class="flex rounded-2xl bg-white p-5 shadow-sm">
+        <div class="flex-1">
+          <p class="text-xs tracking-wide text-slate-400">Σύνολο Τιμολογίων</p>
+          <p class="mt-1 text-3xl font-bold text-slate-900">{{ invoices.length }}</p>
+        </div>
+        <div class="flex-1 border-l border-slate-100 pl-5">
+          <p class="text-xs tracking-wide text-slate-400">Σύνολο Προμηθευτών</p>
+          <p class="mt-1 text-3xl font-bold text-slate-900">{{ uniqueSupplierCount }}</p>
+        </div>
       </div>
       <div class="rounded-2xl bg-white p-5 shadow-sm">
         <p class="text-xs tracking-wide text-slate-400">Σύνολο Υπολοίπων</p>
@@ -22,42 +28,82 @@
       {{ error }}
     </p>
 
-    <div v-else class="space-y-4">
+    <div v-else class="space-y-3 sm:space-y-4">
       <article
         v-for="invoice in invoices"
         :key="invoice.id"
-        class="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
+        class="rounded-2xl bg-white p-4 shadow-sm"
       >
-        <div class="flex-1">
-          <p class="text-sm font-semibold text-slate-900">
-            {{ invoice.supplierName }}
-          </p>
-          <p class="text-xs text-slate-500">
-            {{ invoice.invoiceNumber ?? invoice.id }}
-          </p>
+        <!-- Mobile Layout -->
+        <div class="sm:hidden">
+          <!-- Row 1: Supplier name + Payment button -->
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold text-slate-900">
+                {{ invoice.supplierName }}
+              </p>
+              <p class="mt-0.5 text-xs text-slate-400">
+                ΤΔΑ-{{ invoice.invoiceNumber ?? invoice.id }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition active:scale-95"
+              @click.stop="openPaymentModal(invoice)"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
+          </div>
+          <!-- Row 2: Amounts -->
+          <div class="mt-3 flex items-baseline justify-between">
+            <p class="text-lg font-bold text-slate-900">
+              € {{ (invoice.totalAmount ?? 0).toFixed(2) }}
+            </p>
+            <p class="text-sm font-medium" :class="invoice.unpaidAmount ? 'text-amber-600' : 'text-emerald-600'">
+              Υπόλοιπο: € {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
+            </p>
+          </div>
+          <!-- Row 3: Badges -->
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <ExpiryBadge :invoice-date="invoice.invoiceDate" />
+            <StatusBadge :status="invoice.paymentStatus ?? invoice.status" />
+          </div>
         </div>
-        <div class="text-right">
-          <p class="text-sm font-semibold text-slate-900">
-            {{ invoice.currency ?? 'EUR' }} {{ (invoice.totalAmount ?? 0).toFixed(2) }}
-          </p>
-          <p class="text-xs" :class="invoice.unpaidAmount ? 'text-amber-600' : 'text-emerald-600'">
-            Ανεξόφλητο: {{ invoice.currency ?? 'EUR' }} {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
-          </p>
-        </div>
-        <div class="ml-3 flex items-center gap-2 sm:ml-4">
-          <ExpiryBadge :invoice-date="invoice.invoiceDate" />
-          <StatusBadge :status="invoice.paymentStatus ?? invoice.status" />
-          <!-- Payment button -->
-          <button
-            type="button"
-            class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition hover:bg-primary-100 active:scale-95 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
-            @click.stop="openPaymentModal(invoice)"
-          >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span class="hidden text-sm font-medium sm:inline">Πληρωμή</span>
-          </button>
+
+        <!-- Desktop Layout (sm+) -->
+        <div class="hidden sm:flex sm:items-center sm:justify-between">
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-900">
+              {{ invoice.supplierName }}
+            </p>
+            <p class="text-xs text-slate-500">
+              ΤΔΑ-{{ invoice.invoiceNumber ?? invoice.id }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-semibold text-slate-900">
+              {{ invoice.currency ?? 'EUR' }} {{ (invoice.totalAmount ?? 0).toFixed(2) }}
+            </p>
+            <p class="text-xs" :class="invoice.unpaidAmount ? 'text-amber-600' : 'text-emerald-600'">
+              Ανεξόφλητο: {{ invoice.currency ?? 'EUR' }} {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
+            </p>
+          </div>
+          <div class="ml-4 flex items-center gap-2">
+            <ExpiryBadge :invoice-date="invoice.invoiceDate" />
+            <StatusBadge :status="invoice.paymentStatus ?? invoice.status" />
+            <button
+              type="button"
+              class="flex h-9 items-center gap-2 rounded-xl bg-primary-50 px-3 text-primary-600 transition hover:bg-primary-100 active:scale-95"
+              @click.stop="openPaymentModal(invoice)"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span class="text-sm font-medium">Πληρωμή</span>
+            </button>
+          </div>
         </div>
       </article>
     </div>
@@ -111,6 +157,11 @@ const modalErrorDetails = ref<string[]>([]);
 const totalAmount = computed(() =>
   invoices.value.reduce((sum, inv) => sum + (inv.unpaidAmount ?? inv.totalAmount ?? 0), 0).toFixed(2)
 );
+
+const uniqueSupplierCount = computed(() => {
+  const supplierIds = new Set(invoices.value.map((inv) => inv.supplierId ?? inv.supplierTaxNumber));
+  return supplierIds.size;
+});
 
 const openPaymentModal = (invoice: Invoice) => {
   selectedInvoice.value = invoice;

@@ -17,7 +17,7 @@ const labelMap: Record<Status, string> = {
   failed: 'Αποτυχία Μεταφόρτωσης',
   paid: 'Εξοφλημένο',
   unpaid: 'Ανεξόφλητο',
-  partially_paid: 'Έναντι',
+  partially_paid: 'Μερικώς εξοφλημένο',
 };
 
 const colors: Record<Status, string> = {
