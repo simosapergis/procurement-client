@@ -1,0 +1,295 @@
+<template>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="isOpen"
+        class="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+        @click.self="handleClose"
+      >
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="handleClose" />
+
+        <!-- Modal Panel -->
+        <div
+          class="relative w-full max-w-md rounded-t-3xl bg-white px-6 pb-8 pt-4 shadow-2xl sm:rounded-3xl sm:m-4"
+        >
+          <!-- Drag indicator (mobile) -->
+          <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-300 sm:hidden" />
+
+          <!-- SUCCESS STATE -->
+          <Transition name="fade" mode="out-in">
+            <div v-if="status === 'success'" key="success" class="text-center py-4">
+              <!-- Success icon -->
+              <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                <svg class="h-10 w-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 class="mb-2 text-xl font-semibold text-slate-900">Επιτυχής Καταχώρηση!</h3>
+              <p class="mb-8 text-sm text-slate-500">
+                Η πληρωμή καταχωρήθηκε επιτυχώς για το τιμολόγιο του προμηθευτή
+                <span class="font-medium text-slate-700">{{ supplierName }}</span>
+              </p>
+              <button
+                type="button"
+                class="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-base font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700 active:scale-[0.98]"
+                @click="handleClose"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Κλείσιμο
+              </button>
+            </div>
+
+            <!-- ERROR STATE -->
+            <div v-else-if="status === 'error'" key="error" class="text-center py-4">
+              <!-- Error icon -->
+              <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-100">
+                <svg class="h-10 w-10 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 class="mb-2 text-xl font-semibold text-slate-900">Αποτυχία Καταχώρησης</h3>
+              <p class="mb-4 text-sm text-slate-500">
+                Η πληρωμή δεν καταχωρήθηκε για το τιμολόγιο του προμηθευτή
+                <span class="font-medium text-slate-700">{{ supplierName }}</span>
+              </p>
+              <!-- Error message box -->
+              <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-left">
+                <p class="text-sm font-semibold text-rose-800">{{ errorMessage }}</p>
+                <ul v-if="errorDetails && errorDetails.length > 0" class="mt-2 space-y-1">
+                  <li
+                    v-for="(detail, index) in errorDetails"
+                    :key="index"
+                    class="flex items-start gap-2 text-sm text-rose-700"
+                  >
+                    <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01" />
+                    </svg>
+                    {{ detail }}
+                  </li>
+                </ul>
+              </div>
+              <!-- Action buttons -->
+              <div class="flex gap-3">
+                <button
+                  type="button"
+                  class="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white text-base font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"
+                  @click="handleClose"
+                >
+                  Κλείσιμο
+                </button>
+                <button
+                  type="button"
+                  class="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.98]"
+                  @click="handleRetry"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Επανάληψη
+                </button>
+              </div>
+            </div>
+
+            <!-- FORM STATE -->
+            <div v-else key="form">
+              <!-- Header -->
+              <div class="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-900">Καταχώρηση Πληρωμής</h3>
+                  <p class="text-sm text-slate-500">{{ supplierName }}</p>
+                </div>
+                <button
+                  type="button"
+                  class="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                  @click="handleClose"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Total info -->
+              <div class="mb-6 rounded-2xl bg-slate-50 p-4">
+                <p class="text-xs uppercase tracking-wide text-slate-400">Συνολικό Ποσό</p>
+                <p class="text-2xl font-bold text-slate-900">€ {{ totalAmount.toFixed(2) }}</p>
+              </div>
+
+              <!-- Amount input section -->
+              <div class="mb-6">
+                <label class="mb-2 block text-sm font-medium text-slate-700">Ποσό Πληρωμής</label>
+                <div class="flex gap-3">
+                  <!-- Input with euro sign -->
+                  <div class="relative flex-1">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">€</span>
+                    <input
+                      v-model.number="amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      :max="totalAmount"
+                      placeholder="0.00"
+                      class="h-14 w-full rounded-xl border-2 border-slate-200 bg-white pl-9 pr-4 text-lg font-semibold text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/20"
+                      :class="{ 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20': amountError }"
+                    />
+                  </div>
+                  <!-- Full payment button -->
+                  <button
+                    type="button"
+                    class="flex h-14 shrink-0 items-center gap-2 rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95"
+                    @click="fillTotalAmount"
+                  >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="hidden sm:inline">Ολική πληρωμή</span>
+                    <span class="sm:hidden">Ολική</span>
+                  </button>
+                </div>
+                <p v-if="amountError" class="mt-2 text-sm text-rose-600">{{ amountError }}</p>
+              </div>
+
+              <!-- Submit button -->
+              <button
+                type="button"
+                :disabled="!isValid || loading"
+                class="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary-600 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                @click="handleSubmit"
+              >
+                <svg v-if="loading" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {{ loading ? 'Καταχώρηση...' : 'Καταχώρηση Πληρωμής' }}
+              </button>
+            </div>
+          </Transition>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+
+type ModalStatus = 'form' | 'success' | 'error';
+
+const props = defineProps<{
+  isOpen: boolean;
+  invoiceId: string;
+  supplierId: string;
+  supplierName: string;
+  totalAmount: number;
+  loading?: boolean;
+  status?: ModalStatus;
+  errorMessage?: string;
+  errorDetails?: string[];
+}>();
+
+const emit = defineEmits<{
+  (e: 'close'): void;
+  (e: 'submit', payload: { invoiceId: string; supplierId: string; amount: number }): void;
+  (e: 'retry'): void;
+}>();
+
+const amount = ref<number | null>(null);
+
+// Reset amount when modal opens
+watch(() => props.isOpen, (open) => {
+  if (open) {
+    amount.value = null;
+  }
+});
+
+const status = computed(() => props.status ?? 'form');
+
+const amountError = computed(() => {
+  if (amount.value === null || amount.value === 0) return null;
+  if (amount.value < 0) return 'Το ποσό δεν μπορεί να είναι αρνητικό';
+  if (amount.value > props.totalAmount) return `Το ποσό δεν μπορεί να υπερβαίνει τα € ${props.totalAmount.toFixed(2)}`;
+  return null;
+});
+
+const isValid = computed(() => {
+  return amount.value !== null && amount.value > 0 && !amountError.value;
+});
+
+const fillTotalAmount = () => {
+  amount.value = props.totalAmount;
+};
+
+const handleSubmit = () => {
+  if (!isValid.value || amount.value === null) return;
+  emit('submit', {
+    invoiceId: props.invoiceId,
+    supplierId: props.supplierId,
+    amount: amount.value,
+  });
+};
+
+const handleClose = () => {
+  emit('close');
+};
+
+const handleRetry = () => {
+  emit('retry');
+};
+</script>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-enter-active .relative,
+.modal-leave-active .relative {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .relative,
+.modal-leave-to .relative {
+  transform: translateY(100%);
+}
+
+@media (min-width: 640px) {
+  .modal-enter-from .relative,
+  .modal-leave-to .relative {
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+/* Fade transition for content switching */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+</style>

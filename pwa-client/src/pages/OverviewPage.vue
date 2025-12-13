@@ -44,9 +44,20 @@
             Ανεξόφλητο: {{ invoice.currency ?? 'EUR' }} {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
           </p>
         </div>
-        <div class="ml-4 flex items-center gap-2">
+        <div class="ml-3 flex items-center gap-2 sm:ml-4">
           <ExpiryBadge :invoice-date="invoice.invoiceDate" />
           <StatusBadge :status="invoice.paymentStatus ?? invoice.status" />
+          <!-- Payment button -->
+          <button
+            type="button"
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition hover:bg-primary-100 active:scale-95 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+            @click.stop="openPaymentModal(invoice)"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span class="hidden text-sm font-medium sm:inline">Πληρωμή</span>
+          </button>
         </div>
       </article>
     </div>
@@ -54,6 +65,22 @@
     <p v-if="!loading && invoices.length === 0" class="mt-4 text-sm text-slate-500">
       Δεν βρέθηκαν ανεξόφλητα τιμολόγια.
     </p>
+
+    <!-- Payment Modal -->
+    <PaymentModal
+      :is-open="paymentModalOpen"
+      :invoice-id="selectedInvoice?.id ?? ''"
+      :supplier-id="selectedInvoice?.supplierId ?? selectedInvoice?.supplierTaxNumber ?? ''"
+      :supplier-name="selectedInvoice?.supplierName ?? ''"
+      :total-amount="selectedInvoice?.unpaidAmount ?? selectedInvoice?.totalAmount ?? 0"
+      :loading="submitting"
+      :status="modalStatus"
+      :error-message="modalErrorMessage"
+      :error-details="modalErrorDetails"
+      @close="closePaymentModal"
+      @submit="handlePaymentSubmit"
+      @retry="handlePaymentRetry"
+    />
   </section>
 </template>
 
@@ -62,9 +89,11 @@ import { computed, onMounted, ref } from 'vue';
 
 import ExpiryBadge from '@/components/ExpiryBadge.vue';
 import Loader from '@/components/Loader.vue';
+import PaymentModal from '@/components/PaymentModal.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useFirestore } from '@/composables/useFirestore';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
+import { PaymentError, updatePaymentStatus } from '@/services/api/updatePaymentStatus';
 
 const { fetchUnpaidInvoices } = useFirestore();
 
@@ -72,9 +101,89 @@ const invoices = ref<Invoice[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
+// Payment modal state
+const paymentModalOpen = ref(false);
+const selectedInvoice = ref<Invoice | null>(null);
+const modalStatus = ref<'form' | 'success' | 'error'>('form');
+const modalErrorMessage = ref('');
+const modalErrorDetails = ref<string[]>([]);
+
 const totalAmount = computed(() =>
-  invoices.value.reduce((sum, inv) => sum + (inv.totalAmount ?? 0), 0).toFixed(2)
+  invoices.value.reduce((sum, inv) => sum + (inv.unpaidAmount ?? inv.totalAmount ?? 0), 0).toFixed(2)
 );
+
+const openPaymentModal = (invoice: Invoice) => {
+  selectedInvoice.value = invoice;
+  modalStatus.value = 'form';
+  modalErrorMessage.value = '';
+  modalErrorDetails.value = [];
+  paymentModalOpen.value = true;
+};
+
+const closePaymentModal = () => {
+  paymentModalOpen.value = false;
+  // Delay resetting state so the closing animation completes
+  setTimeout(() => {
+    selectedInvoice.value = null;
+    modalStatus.value = 'form';
+    modalErrorMessage.value = '';
+    modalErrorDetails.value = [];
+  }, 300);
+};
+
+const handlePaymentRetry = () => {
+  modalStatus.value = 'form';
+  modalErrorMessage.value = '';
+  modalErrorDetails.value = [];
+};
+
+const submitting = ref(false);
+
+const handlePaymentSubmit = async (payload: { invoiceId: string; supplierId: string; amount: number }) => {
+  if (submitting.value || !selectedInvoice.value) return;
+
+  submitting.value = true;
+  const invoiceTotalAmount = selectedInvoice.value.unpaidAmount ?? selectedInvoice.value.totalAmount ?? 0;
+  const isFullPayment = payload.amount >= invoiceTotalAmount;
+
+  try {
+    await updatePaymentStatus({
+      supplierId: payload.supplierId,
+      invoiceId: payload.invoiceId,
+      action: isFullPayment ? 'pay' : 'partial',
+      amount: payload.amount,
+      paymentDate: new Date().toISOString(),
+    });
+
+    // Update local state to reflect payment
+    const invoice = invoices.value.find((inv) => inv.id === payload.invoiceId);
+    if (invoice) {
+      if (isFullPayment) {
+        // Remove from unpaid list
+        invoices.value = invoices.value.filter((inv) => inv.id !== payload.invoiceId);
+      } else {
+        // Update unpaid amount
+        invoice.unpaidAmount = (invoice.unpaidAmount ?? invoice.totalAmount ?? 0) - payload.amount;
+        invoice.paymentStatus = 'partially_paid';
+      }
+    }
+
+    // Show success state in modal
+    modalStatus.value = 'success';
+  } catch (err) {
+    console.error('Payment failed:', err);
+    if (err instanceof PaymentError) {
+      modalErrorMessage.value = err.message;
+      modalErrorDetails.value = err.details;
+    } else {
+      modalErrorMessage.value = err instanceof Error ? err.message : 'Αποτυχία καταχώρησης πληρωμής';
+      modalErrorDetails.value = [];
+    }
+    modalStatus.value = 'error';
+  } finally {
+    submitting.value = false;
+  }
+};
 
 onMounted(async () => {
   try {
