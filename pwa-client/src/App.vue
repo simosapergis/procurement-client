@@ -4,7 +4,7 @@
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <RouterLink to="/" class="text-lg font-semibold text-primary-600">MyLogia</RouterLink>
         <nav class="flex gap-4 text-sm font-medium text-slate-600">
-          <RouterLink to="/overview" class="hover:text-primary-600">Σύνοψη</RouterLink>
+          <RouterLink to="/" class="hover:text-primary-600">Σύνοψη</RouterLink>
           <RouterLink to="/upload" class="hover:text-primary-600">Σάρωση</RouterLink>
           <RouterLink to="/suppliers" class="hover:text-primary-600">Προμηθευτές</RouterLink>
         </nav>

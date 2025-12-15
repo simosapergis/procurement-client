@@ -29,7 +29,6 @@ interface PageEntry {
 
 export function useInvoiceUpload() {
   const totalPages = ref<number | null>(null);
-  const existingInvoiceId = ref('');
   const activeInvoiceId = ref<string | null>(null);
   const status = ref<UploadState>('idle');
   const error = ref<string | null>(null);
@@ -76,7 +75,6 @@ export function useInvoiceUpload() {
     status.value = 'idle';
     error.value = null;
     totalPages.value = null;
-    existingInvoiceId.value = '';
     activeInvoiceId.value = null;
   };
 
@@ -150,8 +148,7 @@ export function useInvoiceUpload() {
       return;
     }
 
-    const invoiceIdSeed = existingInvoiceId.value.trim() || activeInvoiceId.value || null;
-    let invoiceId = invoiceIdSeed;
+    let invoiceId = activeInvoiceId.value;
 
     status.value = 'uploading';
     error.value = null;
@@ -163,12 +160,12 @@ export function useInvoiceUpload() {
       page.progress = 0;
 
       try {
-        const includeTotalPages = !invoiceId && !invoiceIdSeed && page.pageNumber === 1 ? totalPages.value : undefined;
+        const includeTotalPages = !invoiceId && page.pageNumber === 1 ? totalPages.value : undefined;
         const result = await uploadFlow.uploadPage({
           file: page.file,
           pageNumber: page.pageNumber,
           totalPages: includeTotalPages ?? undefined,
-          invoiceId: invoiceId ?? invoiceIdSeed ?? undefined,
+          invoiceId: invoiceId ?? undefined,
           quality: page.quality,
           onProgress(progress) {
             page.progress = Math.round(progress);
@@ -207,7 +204,6 @@ export function useInvoiceUpload() {
     status,
     error,
     totalPages,
-    existingInvoiceId,
     activeInvoiceId,
     pages,
     uploadsLog,
