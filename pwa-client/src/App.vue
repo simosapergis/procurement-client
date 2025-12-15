@@ -2,12 +2,11 @@
   <div class="flex min-h-screen flex-col bg-slate-100">
     <header class="bg-white shadow-sm">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <RouterLink to="/" class="text-lg font-semibold text-primary-600">Invoice Uploader</RouterLink>
+        <RouterLink to="/" class="text-lg font-semibold text-primary-600">MyLogia</RouterLink>
         <nav class="flex gap-4 text-sm font-medium text-slate-600">
-          <RouterLink to="/overview" class="hover:text-primary-600">Επισκόπηση</RouterLink>
-          <RouterLink to="/upload" class="hover:text-primary-600">Upload</RouterLink>
-          <RouterLink to="/suppliers" class="hover:text-primary-600">Suppliers</RouterLink>
-          <RouterLink to="/login" class="hover:text-primary-600">Login</RouterLink>
+          <RouterLink to="/overview" class="hover:text-primary-600">Σύνοψη</RouterLink>
+          <RouterLink to="/upload" class="hover:text-primary-600">Σάρωση</RouterLink>
+          <RouterLink to="/suppliers" class="hover:text-primary-600">Προμηθευτές</RouterLink>
         </nav>
       </div>
     </header>
