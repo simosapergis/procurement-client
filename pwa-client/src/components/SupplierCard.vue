@@ -2,7 +2,7 @@
   <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
     <header class="flex items-center justify-between">
       <h3 class="text-base font-semibold text-slate-900">{{ supplier.name }}</h3>
-      <span :class="badgeClass">{{ supplier.status ?? 'unknown' }}</span>
+      <span :class="badgeClass">{{ supplier.status ?? '' }}</span>
     </header>
     <p v-if="supplier.contactEmail" class="mt-2 text-sm text-slate-500">
       {{ supplier.contactEmail }}

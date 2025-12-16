@@ -282,7 +282,7 @@ export function useFcm() {
   const initializeFcm = async (): Promise<boolean> => {
     // FCM is disabled - set FCM_ENABLED = true to enable
     if (!FCM_ENABLED) {
-      console.info('[FCM] FCM is disabled. Set FCM_ENABLED = true in useFcm.ts to enable.');
+      console.info('[FCM] FCM is disabled.');
       return false;
     }
 

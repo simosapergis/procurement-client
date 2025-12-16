@@ -1,29 +1,16 @@
 <template>
   <section class="w-full">
     <header class="mb-6 flex items-center justify-between">
-      <div>
-        <p class="text-xs uppercase tracking-wide text-primary-600">Directory</p>
-        <h2 class="text-2xl font-semibold text-slate-900">Suppliers</h2>
-      </div>
-      <div class="flex gap-2">
-        <button
-          type="button"
-          class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
-          :disabled="loading"
-          @click="refresh"
-        >
-          Refresh
-        </button>
-        <button
-          v-if="activeSupplierId"
-          type="button"
-          class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
-          :disabled="invoiceLoading"
-          @click="clearSelection"
-        >
-          Clear
-        </button>
-      </div>
+      <h2 class="text-2xl font-semibold text-slate-900">Προμηθευτές</h2>
+      <button
+        v-if="activeSupplierId"
+        type="button"
+        class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
+        :disabled="invoiceLoading"
+        @click="clearSelection"
+      >
+        Καθαρισμός
+      </button>
     </header>
     <Loader v-if="loading" label="Loading suppliers..." />
     <p v-else-if="error" class="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
@@ -101,13 +88,6 @@ const detailLoading = ref(false);
 onMounted(async () => {
   await hydrate();
 });
-
-const refresh = async () => {
-  await hydrate(true);
-  if (activeSupplierId.value) {
-    await loadInvoices(activeSupplierId.value);
-  }
-};
 
 const selectSupplier = async (supplierId: string) => {
   activeSupplierId.value = supplierId;

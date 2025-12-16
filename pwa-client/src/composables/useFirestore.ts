@@ -37,7 +37,6 @@ export function useFirestore() {
 
   const fetchSuppliers = async (): Promise<Supplier[]> => {
     const collectionPath = 'suppliers';
-    console.info('[Firestore] querying collection', collectionPath);
     const snapshot = await getDocs(query(suppliersRef, orderBy('name', 'asc')));
     const suppliers = snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...(docSnapshot.data() as Supplier) }));
     console.info(snapshot);
@@ -46,11 +45,9 @@ export function useFirestore() {
 
   const fetchSupplierInvoices = async (supplierId: string): Promise<Invoice[]> => {
     const collectionPath = `suppliers/${supplierId}/invoices`;
-    console.info('[Firestore] querying collection', collectionPath);
     const invoicesCollection = collection(db, collectionPath);
     const snapshot = await getDocs(invoicesCollection);
     const invoices = snapshot.docs.map((docSnapshot) => ({ ...(docSnapshot.data() as Invoice), id: docSnapshot.id }));
-    console.info('[Firestore] fetched supplier invoices', supplierId, invoices.length);
     return invoices;
   };
 
@@ -78,7 +75,6 @@ export function useFirestore() {
   };
 
   const fetchUnpaidInvoices = async (): Promise<Invoice[]> => {
-    console.info('[Firestore] querying unpaid invoices (collectionGroup)');
     const q = query(
       collectionGroup(db, 'invoices'),
       where('paymentStatus', 'in', ['unpaid', 'partially_paid'])
@@ -88,7 +84,6 @@ export function useFirestore() {
       ...(docSnapshot.data() as Invoice),
       id: docSnapshot.id,
     }));
-    console.info('[Firestore] fetched unpaid invoices', invoices.length);
     return invoices;
   };
 
