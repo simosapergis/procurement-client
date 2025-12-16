@@ -1,6 +1,6 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-100">
-    <header class="bg-white shadow-sm">
+    <header class="sticky top-0 z-50 bg-white shadow-sm">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <RouterLink to="/" class="text-lg font-semibold text-primary-600">MyLogia</RouterLink>
 
