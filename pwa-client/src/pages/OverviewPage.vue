@@ -1,7 +1,6 @@
 <template>
   <section class="w-full">
     <header class="mb-6">
-      <p class="text-xs uppercase tracking-wide text-primary-600">Σύνοψη</p>
       <h2 class="text-2xl font-semibold text-slate-900">Σύνοψη</h2>
       <p class="mt-1 text-sm text-slate-500">Ανεξόφλητα και μερικώς εξοφλημένα τιμολόγια</p>
     </header>
