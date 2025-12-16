@@ -9,9 +9,6 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@firebase/app": "latest",
-    "@firebase/auth": "latest",
-    "@firebase/firestore": "latest",
     "firebase": "^11.0.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",

@@ -9,4 +9,15 @@ export const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
 };
 
+// Debug: Log config on initialization (remove in production)
+console.info('[Firebase] Initializing with config:', {
+  hasApiKey: !!firebaseConfig.apiKey,
+  hasAuthDomain: !!firebaseConfig.authDomain,
+  hasProjectId: !!firebaseConfig.projectId,
+  hasStorageBucket: !!firebaseConfig.storageBucket,
+  hasMessagingSenderId: !!firebaseConfig.messagingSenderId,
+  hasAppId: !!firebaseConfig.appId,
+  messagingSenderId: firebaseConfig.messagingSenderId || '(EMPTY!)',
+});
+
 export const firebaseApp = initializeApp(firebaseConfig);

@@ -5,6 +5,9 @@ import { registerFcmToken } from '@/services/api/registerFcmToken';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useNotifications } from './useNotifications';
 
+// Set to true to enable FCM, false to disable
+const FCM_ENABLED = false;
+
 // VAPID key for web push - generate this in Firebase Console > Project Settings > Cloud Messaging
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY ?? '';
 
@@ -75,14 +78,35 @@ export function useFcm() {
       return null;
     }
 
+    // Ensure service worker is registered first
+    if (!swRegistration) {
+      console.info('[FCM] Waiting for service worker registration...');
+      try {
+        swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        await navigator.serviceWorker.ready;
+        console.info('[FCM] Service worker ready');
+      } catch (swErr) {
+        console.error('[FCM] Service worker registration failed:', swErr);
+      }
+    }
+
     try {
+      console.info('[FCM] Firebase app name:', firebaseApp.name);
+      console.info('[FCM] Firebase app options:', firebaseApp.options);
       messagingInstance = getMessaging(firebaseApp);
       console.info('[FCM] Messaging instance created successfully');
       return messagingInstance;
     } catch (err) {
       console.error('[FCM] Error initializing messaging:', err);
-      if (err instanceof Error && err.message.includes('messaging')) {
-        console.error('[FCM] This usually means messagingSenderId is missing or invalid');
+      if (err instanceof Error) {
+        console.error('[FCM] Error details:', err.message);
+        // Check if it's the "service not available" error
+        if (err.message.includes('Service messaging is not available')) {
+          console.error('[FCM] This error usually means:');
+          console.error('  1. Browser does not support FCM (try Chrome)');
+          console.error('  2. Running in private/incognito mode');
+          console.error('  3. IndexedDB is not available');
+        }
       }
       return null;
     }
@@ -256,6 +280,12 @@ export function useFcm() {
   };
 
   const initializeFcm = async (): Promise<boolean> => {
+    // FCM is disabled - set FCM_ENABLED = true to enable
+    if (!FCM_ENABLED) {
+      console.info('[FCM] FCM is disabled. Set FCM_ENABLED = true in useFcm.ts to enable.');
+      return false;
+    }
+
     // Check if browser supports notifications
     if (!('Notification' in window)) {
       console.warn('[FCM] Browser does not support notifications');
