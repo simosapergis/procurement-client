@@ -10,4 +10,26 @@
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Prevent text overflow globally */
+* {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure long strings (paths, URLs, IDs) break properly */
+dd,
+p,
+span,
+td,
+li {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* Disable touch zoom on iOS */
+html {
+  touch-action: manipulation;
 }

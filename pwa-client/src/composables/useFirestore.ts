@@ -39,14 +39,13 @@ export function useFirestore() {
     const collectionPath = 'suppliers';
     const snapshot = await getDocs(query(suppliersRef, orderBy('name', 'asc')));
     const suppliers = snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...(docSnapshot.data() as Supplier) }));
-    console.info(snapshot);
     return suppliers;
   };
 
   const fetchSupplierInvoices = async (supplierId: string): Promise<Invoice[]> => {
-    const collectionPath = `suppliers/${supplierId}/invoices`;
-    const invoicesCollection = collection(db, collectionPath);
-    const snapshot = await getDocs(invoicesCollection);
+    const invoicesCollection = collection(db, `suppliers/${supplierId}/invoices`);
+    const q = query(invoicesCollection, orderBy('uploadedAt', 'desc'));
+    const snapshot = await getDocs(q);
     const invoices = snapshot.docs.map((docSnapshot) => ({ ...(docSnapshot.data() as Invoice), id: docSnapshot.id }));
     return invoices;
   };

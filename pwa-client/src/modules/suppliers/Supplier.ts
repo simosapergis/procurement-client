@@ -3,6 +3,7 @@ export type SupplierStatus = 'active' | 'inactive' | 'prospect';
 export interface Supplier {
   id: string;
   name: string;
+  taxId?: string;
   contactEmail?: string;
   contactPhone?: string;
   addressLine1?: string;

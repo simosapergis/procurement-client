@@ -57,7 +57,7 @@ export const mapInvoice = (payload: InvoicePayload): Invoice => ({
   netAmount: payload.netAmount,
   vatAmount: payload.vatAmount,
   vatRate: payload.vatRate,
-  currency: payload.currency ?? 'USD',
+  currency: payload.currency === 'EUR' ? '€' : '$',
   uploadedBy: payload.uploadedBy,
   bucket: payload.bucket,
   rawFilePaths: payload.rawFilePaths ?? [],

@@ -11,6 +11,7 @@ export const useSupplierStore = defineStore('suppliers', {
   }),
   getters: {
     activeSuppliers: (state) => state.suppliers.filter((supplier) => supplier.status !== 'inactive'),
+    getSupplierById: (state) => (id: string) => state.suppliers.find((supplier) => supplier.id === id),
   },
   actions: {
     setSuppliers(entries: Supplier[]) {

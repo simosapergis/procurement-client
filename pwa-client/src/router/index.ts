@@ -4,6 +4,7 @@ import LoginPage from '@/pages/LoginPage.vue';
 import UploadPage from '@/pages/UploadPage.vue';
 import InvoiceDetailsPage from '@/pages/InvoiceDetailsPage.vue';
 import SuppliersPage from '@/pages/SuppliersPage.vue';
+import SupplierInvoicesPage from '@/pages/SupplierInvoicesPage.vue';
 import OverviewPage from '@/pages/OverviewPage.vue';
 import NotificationsPage from '@/pages/NotificationsPage.vue';
 
@@ -13,6 +14,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/upload', name: 'upload', component: UploadPage },
   { path: '/invoices/:id', name: 'invoice-details', component: InvoiceDetailsPage, props: true },
   { path: '/suppliers', name: 'suppliers', component: SuppliersPage },
+  { path: '/suppliers/:supplierId/invoices', name: 'supplier-invoices', component: SupplierInvoicesPage },
   { path: '/notifications', name: 'notifications', component: NotificationsPage },
 ];
 
