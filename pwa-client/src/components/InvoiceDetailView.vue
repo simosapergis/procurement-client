@@ -110,9 +110,26 @@
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100 sm:col-span-2">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Διαδρομή Αρχείου</dt>
-                <dd class="mt-1 text-sm font-medium text-slate-700 break-all">
-                  {{ invoice.filePath ?? '—' }}
+                <dt class="text-xs uppercase tracking-wide text-slate-400">Αρχείο Τιμολογίου</dt>
+                <dd class="mt-2">
+                  <button
+                    v-if="invoice.filePath"
+                    type="button"
+                    :disabled="loadingPdf"
+                    class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
+                    @click="openPdf"
+                  >
+                    <svg v-if="loadingPdf" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    {{ loadingPdf ? 'Φόρτωση...' : 'Προβολή PDF' }}
+                  </button>
+                  <span v-else class="text-sm text-slate-400">Δεν υπάρχει αρχείο</span>
+                  <p v-if="pdfError" class="mt-2 text-xs text-red-500">{{ pdfError }}</p>
                 </dd>
               </div>
             </dl>
@@ -137,9 +154,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref as storageRef, getDownloadURL } from 'firebase/storage';
+import { computed, ref } from 'vue';
 
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
+import { getFirebaseStorage } from '@/services/firebase';
 import { formatDateTime } from '@/utils/date';
 
 const props = defineProps<{
@@ -152,6 +171,9 @@ defineEmits<{
   (e: 'edit'): void;
 }>();
 
+const loadingPdf = ref(false);
+const pdfError = ref<string | null>(null);
+
 const formattedUploadedAt = computed(() => formatDateTime(props.invoice.uploadedAt));
 const formattedTotal = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
 const formattedUnpaid = computed(() => (props.invoice.unpaidAmount ?? 0).toFixed(2));
@@ -161,6 +183,32 @@ const formattedVat = computed(() => (props.invoice.vatAmount ?? 0).toFixed(2));
 const unpaidColor = computed(() =>
   (props.invoice.unpaidAmount ?? 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
 );
+
+const openPdf = async () => {
+  if (!props.invoice.filePath) return;
+
+  loadingPdf.value = true;
+  pdfError.value = null;
+
+  try {
+    // If fileUrl is already available, use it directly
+    if (props.invoice.fileUrl) {
+      window.open(props.invoice.fileUrl, '_blank');
+      return;
+    }
+
+    // Get download URL from Firebase Storage
+    const storage = getFirebaseStorage();
+    const fileRef = storageRef(storage, props.invoice.filePath);
+    const downloadUrl = await getDownloadURL(fileRef);
+    window.open(downloadUrl, '_blank');
+  } catch (error) {
+    console.error('Failed to get PDF URL:', error);
+    pdfError.value = 'Αποτυχία φόρτωσης του αρχείου. Παρακαλώ δοκιμάστε ξανά.';
+  } finally {
+    loadingPdf.value = false;
+  }
+};
 </script>
 
 <style scoped>

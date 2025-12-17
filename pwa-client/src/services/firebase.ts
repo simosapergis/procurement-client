@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
@@ -10,3 +11,12 @@ export const firebaseConfig = {
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
+
+// Lazy-initialized storage instance
+let _storage: FirebaseStorage | null = null;
+export const getFirebaseStorage = (): FirebaseStorage => {
+  if (!_storage) {
+    _storage = getStorage(firebaseApp);
+  }
+  return _storage;
+};
