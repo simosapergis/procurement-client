@@ -201,6 +201,7 @@ const openPdf = async () => {
     const storage = getFirebaseStorage();
     const fileRef = storageRef(storage, props.invoice.filePath);
     const downloadUrl = await getDownloadURL(fileRef);
+ 
     window.open(downloadUrl, '_blank');
   } catch (error) {
     console.error('Failed to get PDF URL:', error);
