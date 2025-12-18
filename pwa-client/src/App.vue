@@ -1,14 +1,17 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-100">
     <header class="sticky top-0 z-50 bg-white shadow-sm">
-      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <RouterLink to="/" class="text-lg font-semibold text-primary-600">MyLogia</RouterLink>
+      <div class="app-header mx-auto flex max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4">
+        <RouterLink to="/" class="app-logo text-base font-semibold text-primary-600 sm:text-lg">MyLogia</RouterLink>
 
         <!-- Authenticated nav -->
-        <nav v-if="isAuthenticated" class="flex items-center gap-4 text-sm font-medium text-slate-600">
-          <RouterLink to="/" class="hover:text-primary-600">Σύνοψη</RouterLink>
-          <RouterLink to="/upload" class="hover:text-primary-600">Σάρωση</RouterLink>
-          <RouterLink to="/suppliers" class="hover:text-primary-600">Προμηθευτές</RouterLink>
+        <nav v-if="isAuthenticated" class="app-nav flex items-center gap-2 text-xs font-medium text-slate-600 sm:gap-4 sm:text-sm">
+          <RouterLink to="/" class="nav-link hover:text-primary-600">Σύνοψη</RouterLink>
+          <RouterLink to="/upload" class="nav-link hover:text-primary-600">Σάρωση</RouterLink>
+          <RouterLink to="/suppliers" class="nav-link hover:text-primary-600">
+            <span class="nav-full">Προμηθευτές</span>
+            <span class="nav-short">Προμηθευτές</span>
+          </RouterLink>
 
           <!-- Notifications (hidden until FCM is enabled) -->
           <!-- <RouterLink to="/notifications" class="relative hover:text-primary-600">
@@ -24,10 +27,10 @@
           </RouterLink> -->
 
           <!-- User menu -->
-          <div class="relative ml-2">
+          <div class="relative ml-1 sm:ml-2">
             <button
               type="button"
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 transition hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              class="flex h-7 w-7 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700 transition hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:h-8 sm:w-8 sm:text-sm"
               @click="userMenuOpen = !userMenuOpen"
             >
               {{ userInitial }}
@@ -161,5 +164,47 @@ const toastClasses = (type: string) => {
 .toast-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* Very small screens (< 410px): show short nav text */
+@media (max-width: 409px) {
+  .nav-full {
+    display: none;
+  }
+
+  .nav-short {
+    display: inline;
+  }
+
+  .app-nav {
+    gap: 0.75rem; /* 12px gap between nav items */
+  }
+}
+
+/* Screens >= 410px: show full nav text and restore font size */
+@media (min-width: 410px) {
+  .nav-full {
+    display: inline;
+  }
+
+  .nav-short {
+    display: none;
+  }
+
+  .app-nav {
+    font-size: 0.875rem; /* text-sm (14px) */
+    gap: 1rem; /* gap-4 */
+  }
+
+  .app-logo {
+    font-size: 1.125rem; /* text-lg (18px) */
+  }
+
+  .app-header {
+    padding-left: 1.5rem; /* px-6 */
+    padding-right: 1.5rem;
+    padding-top: 1rem; /* py-4 */
+    padding-bottom: 1rem;
+  }
 }
 </style>
