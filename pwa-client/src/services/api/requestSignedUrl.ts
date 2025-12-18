@@ -24,7 +24,7 @@ interface SignedUrlRequest {
   folder?: string;
 }
 
-const endpoint = import.meta.env.VITE_SIGNED_URL_ENDPOINT ?? '';
+const endpoint = import.meta.env.VITE_SIGNED_UPLOAD_URL_ENDPOINT ?? '';
 const defaultFolder = import.meta.env.VITE_FIREBASE_BUCKET_FOLDER ?? 'uploads';
 const auth = getAuth(firebaseApp);
 

@@ -14,24 +14,25 @@
           class="relative flex h-full max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-white to-slate-50 shadow-2xl"
         >
           <!-- Header -->
-          <header class="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-5">
-            <div class="min-w-0 flex-1">
-              <p class="text-xs uppercase tracking-widest text-primary-600">ΛΕΠΤΟΜΕΡΕΙΕΣ ΤΙΜΟΛΟΓΙΟΥ</p>
-              <h3 class="text-2xl font-bold text-slate-900">
+          <header class="header-compact flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
+            <div class="min-w-0 flex-1 pr-2">
+              <p class="header-subtitle text-xs uppercase tracking-widest text-primary-600">ΛΕΠΤΟΜΕΡΕΙΕΣ ΤΙΜΟΛΟΓΙΟΥ</p>
+              <p class="header-subtitle-short text-xs uppercase tracking-wide text-primary-600">ΤΙΜΟΛΟΓΙΟ</p>
+              <h3 class="header-title truncate text-xl font-bold text-slate-900 sm:text-2xl">
                 ΤΔΑ-{{ invoice.invoiceNumber ?? invoice.id }}
               </h3>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center gap-2">
+            <div class="flex shrink-0 items-center gap-1 sm:gap-2">
               <!-- Edit Button -->
               <button
                 type="button"
-                class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                class="header-btn flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 sm:h-10 sm:w-10"
                 aria-label="Edit"
                 @click="$emit('edit')"
               >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
@@ -39,11 +40,11 @@
               <!-- Close Button -->
               <button
                 type="button"
-                class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                class="header-btn flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 sm:h-10 sm:w-10"
                 aria-label="Close"
                 @click="$emit('close')"
               >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -154,11 +155,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref as storageRef, getDownloadURL } from 'firebase/storage';
 import { computed, ref } from 'vue';
 
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
-import { getFirebaseStorage } from '@/services/firebase';
+import { requestSignedDownloadUrl } from '@/services/api/requestSignedDownloadUrl';
 import { formatDateTime } from '@/utils/date';
 
 const props = defineProps<{
@@ -197,11 +197,11 @@ const openPdf = async () => {
       return;
     }
 
-    // Get download URL from Firebase Storage
-    const storage = getFirebaseStorage();
-    const fileRef = storageRef(storage, props.invoice.filePath);
-    const downloadUrl = await getDownloadURL(fileRef);
- 
+    // Get signed download URL from backend
+    const { downloadUrl } = await requestSignedDownloadUrl({
+      filePath: props.invoice.filePath,
+    });
+
     window.open(downloadUrl, '_blank');
   } catch (error) {
     console.error('Failed to get PDF URL:', error);
@@ -232,5 +232,27 @@ const openPdf = async () => {
 .modal-leave-to article {
   transform: scale(0.95) translateY(20px);
   opacity: 0;
+}
+
+/* Very small screens (≤409px): show short subtitle, hide long one */
+@media (max-width: 409px) {
+  .header-subtitle {
+    display: none;
+  }
+
+  .header-subtitle-short {
+    display: block;
+  }
+}
+
+/* Screens > 409px: show long subtitle, hide short one */
+@media (min-width: 410px) {
+  .header-subtitle {
+    display: block;
+  }
+
+  .header-subtitle-short {
+    display: none;
+  }
 }
 </style>
