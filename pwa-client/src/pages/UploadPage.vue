@@ -3,7 +3,7 @@
     <div class="rounded-3xl bg-white p-6 shadow-lg">
       <header class="mb-6 flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-semibold text-slate-900">Σάρωση Τιμολογίου</h2>
+          <h2 class="upload-title text-2xl font-semibold text-slate-900">Σάρωση Τιμολογίου</h2>
         </div>
         <StatusBadge :status="statusBadge" />
       </header>
@@ -234,3 +234,23 @@ const formatPageStatus = (pageStatus: string) => {
   }
 };
 </script>
+
+<style scoped>
+/* Default: text-2xl (24px) - handled by Tailwind class */
+
+/* Width <= 410px: text-xl (20px) */
+@media (max-width: 410px) {
+  .upload-title {
+    font-size: 1.25rem; /* text-xl */
+    line-height: 1.75rem;
+  }
+}
+
+/* Width <= 380px: text-lg (18px) */
+@media (max-width: 380px) {
+  .upload-title {
+    font-size: 1.125rem; /* text-lg */
+    line-height: 1.75rem;
+  }
+}
+</style>
