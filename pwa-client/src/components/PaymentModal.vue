@@ -115,7 +115,7 @@
               <!-- Total info -->
               <div class="mb-6 rounded-2xl bg-slate-50 p-4">
                 <p class="text-xs uppercase tracking-wide text-slate-400">Συνολικό Ποσό</p>
-                <p class="text-2xl font-bold text-slate-900">€ {{ totalAmount.toFixed(2) }}</p>
+                <p class="text-2xl font-bold text-slate-900">€ {{ formatCurrency(totalAmount) }}</p>
               </div>
 
               <!-- Amount input section -->
@@ -179,6 +179,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
+import { formatCurrency } from '@/utils/date';
+
 type ModalStatus = 'form' | 'success' | 'error';
 
 const props = defineProps<{
@@ -213,7 +215,7 @@ const status = computed(() => props.status ?? 'form');
 const amountError = computed(() => {
   if (amount.value === null || amount.value === 0) return null;
   if (amount.value < 0) return 'Το ποσό δεν μπορεί να είναι αρνητικό';
-  if (amount.value > props.totalAmount) return `Το ποσό δεν μπορεί να υπερβαίνει τα € ${props.totalAmount.toFixed(2)}`;
+  if (amount.value > props.totalAmount) return `Το ποσό δεν μπορεί να υπερβαίνει τα € ${formatCurrency(props.totalAmount)}`;
   return null;
 });
 

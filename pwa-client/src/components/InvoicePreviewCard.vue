@@ -109,7 +109,7 @@ import { computed } from 'vue';
 
 import StatusBadge from '@/components/StatusBadge.vue';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
-import { formatDateTime } from '@/utils/date';
+import { formatCurrency, formatDateTime } from '@/utils/date';
 
 const props = defineProps<{ invoice: Invoice }>();
 const emit = defineEmits<{
@@ -119,8 +119,8 @@ const emit = defineEmits<{
 
 const formattedDate = computed(() => formatDateTime(props.invoice.uploadedAt));
 const invoiceDate = computed(() => formatDateTime(props.invoice.invoiceDate));
-const totalAmount = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
-const unpaidAmount = computed(() => (props.invoice.unpaidAmount ?? 0).toFixed(2));
+const totalAmount = computed(() => formatCurrency(props.invoice.totalAmount));
+const unpaidAmount = computed(() => formatCurrency(props.invoice.unpaidAmount));
 
 const currencySymbol = computed(() => 
   props.invoice.currency === 'EUR' || props.invoice.currency === '€' ? '€' : '$'

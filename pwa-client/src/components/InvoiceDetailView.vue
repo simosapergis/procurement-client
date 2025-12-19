@@ -55,63 +55,70 @@
           <div class="flex-1 overflow-y-auto p-6">
             <dl class="grid gap-5 sm:grid-cols-2">
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Προμηθευτής</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΠΡΟΜΗΘΕΥΤΗΣ</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   {{ invoice.supplierName ?? '—' }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">ΑΦΜ Προμηθευτή</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">Α.Φ.Μ. ΠΡΟΜΗΘΕΥΤΗ</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   {{ invoice.supplierTaxNumber ?? '—' }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Αριθμός Τιμολογίου</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΑΡΙΘΜΟΣ ΤΙΜΟΛΟΓΙΟΥ</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   {{ invoice.invoiceNumber ?? '—' }}
                 </dd>
               </div>
+              
+              <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+                <dt class="text-xs uppercase tracking-wide text-slate-400">HΜΕΡΟΜΗΝΙΑ ΕΚΔΟΣΗΣ</dt>
+                <dd class="mt-1 text-lg font-semibold text-slate-900">
+                  {{ formattedInvoiceDate }}
+                </dd>
+              </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Ημερομηνία Μεταφόρτωσης</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΗΜΕΡΟΜΗΝΙΑ ΜΕΤΑΦΟΡΤΩΣΗΣ</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   {{ formattedUploadedAt }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Συνολικό Ποσό</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΣΥΝΟΛΙΚΟ ΠΟΣΟ</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   € {{ formattedTotal }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Ανεξόφλητο Ποσό</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΑΝΕΞΟΦΛΗΤΟ ΠΟΣΟ</dt>
                 <dd class="mt-1 text-lg font-semibold" :class="unpaidColor">
                   € {{ formattedUnpaid }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Καθαρό Ποσό</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΚΑΘΑΡΟ ΠΟΣΟ</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   € {{ formattedNet }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">ΦΠΑ</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">Φ.Π.Α.</dt>
                 <dd class="mt-1 text-lg font-semibold text-slate-900">
                   € {{ formattedVat }}
                 </dd>
               </div>
 
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100 sm:col-span-2">
-                <dt class="text-xs uppercase tracking-wide text-slate-400">Αρχείο Τιμολογίου</dt>
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΑΡΧΕΙΟ ΤΙΜΟΛΟΓΙΟΥ</dt>
                 <dd class="mt-2">
                   <button
                     v-if="invoice.filePath"
@@ -159,7 +166,7 @@ import { computed, ref } from 'vue';
 
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import { requestSignedDownloadUrl } from '@/services/api/requestSignedDownloadUrl';
-import { formatDateTime } from '@/utils/date';
+import { formatCurrency, formatDateTime } from '@/utils/date';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -175,10 +182,11 @@ const loadingPdf = ref(false);
 const pdfError = ref<string | null>(null);
 
 const formattedUploadedAt = computed(() => formatDateTime(props.invoice.uploadedAt));
-const formattedTotal = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
-const formattedUnpaid = computed(() => (props.invoice.unpaidAmount ?? 0).toFixed(2));
-const formattedNet = computed(() => (props.invoice.netAmount ?? 0).toFixed(2));
-const formattedVat = computed(() => (props.invoice.vatAmount ?? 0).toFixed(2));
+const formattedInvoiceDate = computed(() => formatDateTime(props.invoice.invoiceDate));
+const formattedTotal = computed(() => formatCurrency(props.invoice.totalAmount));
+const formattedUnpaid = computed(() => formatCurrency(props.invoice.unpaidAmount));
+const formattedNet = computed(() => formatCurrency(props.invoice.netAmount));
+const formattedVat = computed(() => formatCurrency(props.invoice.vatAmount));
 
 const unpaidColor = computed(() =>
   (props.invoice.unpaidAmount ?? 0) > 0 ? 'text-amber-600' : 'text-emerald-600'

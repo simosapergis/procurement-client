@@ -35,13 +35,13 @@ import { computed } from 'vue';
 import ExpiryBadge from './ExpiryBadge.vue';
 import StatusBadge from './StatusBadge.vue';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
-import { formatDateTime } from '@/utils/date';
+import { formatCurrency, formatDateTime } from '@/utils/date';
 
 const props = defineProps<{ invoice: Invoice }>();
 const emit = defineEmits<{ (e: 'select', invoiceId: string): void }>();
 
 const formattedDate = computed(() => formatDateTime(props.invoice.uploadedAt ?? props.invoice.processedAt));
 const invoiceDate = computed(() => formatDateTime(props.invoice.invoiceDate));
-const totalAmount = computed(() => (props.invoice.totalAmount ?? 0).toFixed(2));
+const totalAmount = computed(() => formatCurrency(props.invoice.totalAmount));
 const handleClick = () => emit('select', props.invoice.id);
 </script>

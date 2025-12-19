@@ -1,7 +1,26 @@
 <template>
   <section class="w-full">
     <header class="mb-6">
-      <h2 class="text-2xl font-semibold text-slate-900">Σύνοψη</h2>
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-semibold text-slate-900">Σύνοψη</h2>
+        <button
+          type="button"
+          :disabled="loading"
+          class="flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 text-sm font-medium text-primary-600 transition hover:bg-primary-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          @click="refreshInvoices"
+        >
+          <svg
+            class="h-4 w-4"
+            :class="{ 'animate-spin': loading }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Ανανέωση
+        </button>
+      </div>
       <p class="mt-1 text-sm text-slate-500">Ανεξόφλητα και μερικώς εξοφλημένα τιμολόγια</p>
     </header>
 
@@ -12,7 +31,10 @@
           <p class="mt-1 text-3xl font-bold text-slate-900">{{ invoices.length }}</p>
         </div>
         <div class="flex-1 border-l border-slate-100 pl-5">
-          <p class="text-xs tracking-wide text-slate-400">Σύνολο Προμηθευτών</p>
+          <p class="text-xs tracking-wide text-slate-400">
+            <span class="supplier-label-full">Σύνολο Προμηθευτών</span>
+            <span class="supplier-label-short">Σύνολο Προμηθευτ.</span>
+          </p>
           <p class="mt-1 text-3xl font-bold text-slate-900">{{ uniqueSupplierCount }}</p>
         </div>
       </div>
@@ -58,10 +80,10 @@
           <!-- Row 2: Amounts -->
           <div class="mt-3 flex items-baseline justify-between">
             <p class="text-lg font-bold text-slate-900">
-              € {{ (invoice.totalAmount ?? 0).toFixed(2) }}
+              € {{ formatCurrency(invoice.totalAmount) }}
             </p>
             <p class="text-sm font-medium" :class="invoice.unpaidAmount ? 'text-amber-600' : 'text-emerald-600'">
-              Υπόλοιπο: € {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
+              Υπόλοιπο: € {{ formatCurrency(invoice.unpaidAmount) }}
             </p>
           </div>
           <!-- Row 3: Badges -->
@@ -83,10 +105,10 @@
           </div>
           <div class="text-right">
             <p class="text-sm font-semibold text-slate-900">
-              {{ invoice.currency ?? 'EUR' }} {{ (invoice.totalAmount ?? 0).toFixed(2) }}
+              € {{ formatCurrency(invoice.totalAmount) }}
             </p>
             <p class="text-xs" :class="invoice.unpaidAmount ? 'text-amber-600' : 'text-emerald-600'">
-              Ανεξόφλητο: {{ invoice.currency ?? 'EUR' }} {{ (invoice.unpaidAmount ?? 0).toFixed(2) }}
+              Ανεξόφλητο: € {{ formatCurrency(invoice.unpaidAmount) }}
             </p>
           </div>
           <div class="ml-4 flex items-center gap-2">
@@ -139,6 +161,7 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import { useFirestore } from '@/composables/useFirestore';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import { PaymentError, updatePaymentStatus } from '@/services/api/updatePaymentStatus';
+import { formatCurrency } from '@/utils/date';
 
 const { fetchUnpaidInvoices } = useFirestore();
 
@@ -154,7 +177,7 @@ const modalErrorMessage = ref('');
 const modalErrorDetails = ref<string[]>([]);
 
 const totalAmount = computed(() =>
-  invoices.value.reduce((sum, inv) => sum + (inv.unpaidAmount ?? inv.totalAmount ?? 0), 0).toFixed(2)
+  formatCurrency(invoices.value.reduce((sum, inv) => sum + (inv.unpaidAmount ?? inv.totalAmount ?? 0), 0))
 );
 
 const uniqueSupplierCount = computed(() => {
@@ -235,7 +258,9 @@ const handlePaymentSubmit = async (payload: { invoiceId: string; supplierId: str
   }
 };
 
-onMounted(async () => {
+const refreshInvoices = async () => {
+  loading.value = true;
+  error.value = null;
   try {
     invoices.value = await fetchUnpaidInvoices();
   } catch (err) {
@@ -243,6 +268,31 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-});
+};
+
+onMounted(refreshInvoices);
 </script>
 
+<style scoped>
+/* Very small screens (≤ 370px): show short supplier label */
+@media (max-width: 370px) {
+  .supplier-label-full {
+    display: none;
+  }
+
+  .supplier-label-short {
+    display: inline;
+  }
+}
+
+/* Screens > 370px: show full supplier label */
+@media (min-width: 371px) {
+  .supplier-label-full {
+    display: inline;
+  }
+
+  .supplier-label-short {
+    display: none;
+  }
+}
+</style>

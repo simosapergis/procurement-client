@@ -1,3 +1,18 @@
+/**
+ * Formats a number as currency in Greek locale (el-GR)
+ * Uses comma as decimal separator, period as thousands separator
+ * Example: 1234.56 -> "1.234,56"
+ */
+export const formatCurrency = (value?: number | null, includeCurrencySymbol = false): string => {
+  const amount = value ?? 0;
+  const formatted = new Intl.NumberFormat('el-GR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+  
+  return includeCurrencySymbol ? `€ ${formatted}` : formatted;
+};
+
 export const formatDateTime = (value?: string | Date) => {
   if (!value) return 'Unknown';
 

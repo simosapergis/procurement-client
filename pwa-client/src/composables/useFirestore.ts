@@ -76,7 +76,8 @@ export function useFirestore() {
   const fetchUnpaidInvoices = async (): Promise<Invoice[]> => {
     const q = query(
       collectionGroup(db, 'invoices'),
-      where('paymentStatus', 'in', ['unpaid', 'partially_paid'])
+      where('paymentStatus', 'in', ['unpaid', 'partially_paid']),
+      //orderBy('uploadedAt', 'desc')
     );
     const snapshot = await getDocs(q);
     const invoices = snapshot.docs.map((docSnapshot) => ({

@@ -4,7 +4,6 @@
       <header class="mb-6 flex items-center justify-between">
         <div>
           <h2 class="text-2xl font-semibold text-slate-900">Σάρωση Τιμολογίου</h2>
-          <p class="text-sm text-slate-500">Καταγράψτε κάθε σελίδα, ανεβάστε επί τόπου.</p>
         </div>
         <StatusBadge :status="statusBadge" />
       </header>
@@ -90,7 +89,7 @@
 
     <div class="space-y-4">
       <div class="rounded-3xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">
-        <p class="font-semibold text-slate-700">Περίγραμμα ροής</p>
+        <p class="font-semibold text-slate-700">Βήματα Σάρωσης</p>
         <ol class="mt-2 list-decimal space-y-1 pl-5">
           <li>Καταχώρηση συνολικού αριθμού σελίδων.</li>
           <li>Λήψη σελίδας.</li>

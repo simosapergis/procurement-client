@@ -15,8 +15,6 @@ export function useInvoiceStatus() {
     store.setInvoices(snapshot);
   };
 
-  const watchInvoice = (id: string) => subscribeToInvoice(id, (invoice) => store.upsertInvoice(invoice));
-
   const getInvoiceById = (id: string) => store.invoices.find((invoice) => invoice.id === id) ?? null;
   const upsertInvoice = (invoice: Invoice) => store.upsertInvoice(invoice);
   const setActiveInvoice = (id: string | null) => store.setActiveInvoice(id);
@@ -25,7 +23,6 @@ export function useInvoiceStatus() {
     invoices,
     activeInvoice,
     hydrate,
-    watchInvoice,
     setActiveInvoice,
     upsertInvoice,
     getInvoiceById,
