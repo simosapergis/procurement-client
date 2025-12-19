@@ -192,6 +192,30 @@ const unpaidColor = computed(() =>
   (props.invoice.unpaidAmount ?? 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
 );
 
+/**
+ * Detects if running as an iOS PWA (standalone mode)
+ */
+const isIOSPwa = (): boolean => {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return isIOS && isStandalone;
+};
+
+/**
+ * Opens a URL. For iOS PWA, navigates directly since new tabs don't work.
+ * For other platforms, uses window.open().
+ */
+const openUrl = (url: string) => {
+  if (isIOSPwa()) {
+    // iOS PWA: Navigate directly - user can swipe back
+    window.location.href = url;
+  } else {
+    // Other platforms: Open in new tab
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+};
+
 const openPdf = async () => {
   if (!props.invoice.filePath) return;
 
@@ -201,7 +225,7 @@ const openPdf = async () => {
   try {
     // If fileUrl is already available, use it directly
     if (props.invoice.fileUrl) {
-      window.open(props.invoice.fileUrl, '_blank');
+      openUrl(props.invoice.fileUrl);
       return;
     }
 
@@ -210,7 +234,7 @@ const openPdf = async () => {
       filePath: props.invoice.filePath,
     });
 
-    window.open(downloadUrl, '_blank');
+    openUrl(downloadUrl);
   } catch (error) {
     console.error('Failed to get PDF URL:', error);
     pdfError.value = 'Αποτυχία φόρτωσης του αρχείου. Παρακαλώ δοκιμάστε ξανά.';
