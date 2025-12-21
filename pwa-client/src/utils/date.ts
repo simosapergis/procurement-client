@@ -13,10 +13,10 @@ export const formatCurrency = (value?: number | null, includeCurrencySymbol = fa
   return includeCurrencySymbol ? `€ ${formatted}` : formatted;
 };
 
-export const formatDateTime = (value?: string | Date) => {
+export const formatDateTime = (value?: string | Date | { seconds: number }) => {
   if (!value) return 'Unknown';
 
-  if (value.seconds) {
+  if (typeof value === 'object' && 'seconds' in value) {
     return new Date(value.seconds * 1000).toLocaleString("el-GR", {
       day: '2-digit',
       month: 'long',

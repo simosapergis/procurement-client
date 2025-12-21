@@ -36,9 +36,11 @@ export function useFirestore() {
   };
 
   const fetchSuppliers = async (): Promise<Supplier[]> => {
-    const collectionPath = 'suppliers';
     const snapshot = await getDocs(query(suppliersRef, orderBy('name', 'asc')));
-    const suppliers = snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...(docSnapshot.data() as Supplier) }));
+    const suppliers = snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data() as Supplier;
+      return { ...data, id: docSnapshot.id };
+    });
     return suppliers;
   };
 
@@ -87,6 +89,22 @@ export function useFirestore() {
     return invoices;
   };
 
+  const fetchInvoicesByDateRange = async (startDate: Date, endDate: Date): Promise<Invoice[]> => {
+    const q = query(
+      collectionGroup(db, 'invoices'),
+      where('uploadedAt', '>=', startDate),
+      where('uploadedAt', '<=', endDate),
+      orderBy('uploadedAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    const invoices = snapshot.docs.map((docSnapshot) => ({
+      ...(docSnapshot.data() as Invoice),
+      id: docSnapshot.id,
+    }));
+    console.info('[Firestore] fetched invoices by date range', invoices.length);
+    return invoices;
+  };
+
   return {
     saveInvoiceRecord,
     fetchInvoices,
@@ -94,6 +112,7 @@ export function useFirestore() {
     fetchSupplierInvoices,
     fetchSupplierInvoice,
     fetchUnpaidInvoices,
+    fetchInvoicesByDateRange,
     subscribeToInvoice,
   };
 }
