@@ -64,7 +64,7 @@ export function useInvoiceUpload() {
     }
 
     if (value !== null && Number.isFinite(value) && value < pages.value.length) {
-      notifyError('Total pages cannot be less than captured pages.');
+      notifyError('Ο συνολικός αριθμός σελίδων δεν μπορεί να είναι μικρότερος από τις ήδη καταγεγραμμένες.');
       return;
     }
     totalPages.value = value;
@@ -80,14 +80,14 @@ export function useInvoiceUpload() {
 
   const addPage = async (file: File) => {
     if (!totalPages.value) {
-      const message = 'Set the total number of pages before capturing.';
+      const message = 'Ορίστε τον συνολικό αριθμό σελίδων πριν τη λήψη.';
       error.value = message;
       notifyError(message);
       return;
     }
 
     if (!canAddPages.value) {
-      const message = 'You have already added all pages for this invoice.';
+      const message = 'Έχετε ήδη προσθέσει όλες τις σελίδες για αυτό το τιμολόγιο.';
       error.value = message;
       notifyError(message);
       return;
@@ -97,7 +97,7 @@ export function useInvoiceUpload() {
     try {
       const quality = await detectQuality(file);
       if (!quality.accepted) {
-        throw new Error(quality.reasons[0] ?? 'Quality check failed. Please retake the photo.');
+        throw new Error(quality.reasons[0] ?? 'Ο έλεγχος ποιότητας απέτυχε. Παρακαλώ επαναλάβετε τη λήψη.');
       }
 
       const pageNumber = pages.value.length + 1;
@@ -106,7 +106,7 @@ export function useInvoiceUpload() {
         {
           id: createUUID(),
           file,
-          name: file.name || `Page ${pageNumber}`,
+          name: file.name || `Σελίδα ${pageNumber}`,
           pageNumber,
           status: 'pending',
           progress: 0,
@@ -116,9 +116,9 @@ export function useInvoiceUpload() {
 
       status.value = 'ready';
       error.value = null;
-      notifySuccess(`Page ${pageNumber} validated. Ready to upload.`);
+      notifySuccess(`Σελίδα ${pageNumber} επικυρώθηκε. Έτοιμη για μεταφόρτωση.`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to validate the photo. Try again.';
+      const message = err instanceof Error ? err.message : 'Αδυναμία επικύρωσης της φωτογραφίας. Δοκιμάστε ξανά.';
       status.value = 'idle';
       error.value = message;
       notifyError(message);
@@ -137,13 +137,13 @@ export function useInvoiceUpload() {
 
   const upload = async () => {
     if (!pages.value.length) {
-      error.value = 'Capture at least one page before uploading.';
+      error.value = 'Καταγράψτε τουλάχιστον μία σελίδα πριν τη μεταφόρτωση.';
       notifyError(error.value);
       return;
     }
 
     if (!totalPages.value) {
-      error.value = 'Specify the total number of pages.';
+      error.value = 'Ορίστε τον συνολικό αριθμό σελίδων.';
       notifyError(error.value);
       return;
     }
@@ -179,9 +179,15 @@ export function useInvoiceUpload() {
         page.result = result;
         uploadsLog.value.push(result);
 
-        notifySuccess(`Uploaded page ${result.pageNumber} of ${result.totalPages ?? totalPages.value}.`);
+        const currentTotal = result.totalPages ?? totalPages.value;
+        const isLastPage = result.pageNumber === currentTotal;
+
+        // Only show individual page toast if it's not the last page
+        if (!isLastPage) {
+          notifySuccess(`Μεταφορτώθηκε σελίδα ${result.pageNumber} από ${currentTotal}.`);
+        }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Upload failed';
+        const message = err instanceof Error ? err.message : 'Η μεταφόρτωση απέτυχε';
         page.status = 'error';
         page.error = message;
         status.value = 'error';
@@ -193,7 +199,7 @@ export function useInvoiceUpload() {
 
     if (completedPages.value === totalPages.value) {
       status.value = 'completed';
-      notifySuccess('All pages uploaded. Processing will continue in the background.');
+      notifySuccess(`Ολοκληρώθηκε η μεταφόρτωση ${totalPages.value}/${totalPages.value} σελίδων. Η επεξεργασία θα συνεχιστεί στο παρασκήνιο.`);
       resetQueue();
     } else {
       status.value = 'ready';

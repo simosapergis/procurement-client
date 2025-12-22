@@ -7,7 +7,7 @@ import { useFirestore } from './useFirestore';
 export function useInvoiceStatus() {
   const store = useInvoiceStore();
   const { invoices, activeInvoice } = storeToRefs(store);
-  const { fetchInvoices, subscribeToInvoice } = useFirestore();
+  const { fetchInvoices } = useFirestore();
 
   const hydrate = async () => {
     if (store.initialized) return;

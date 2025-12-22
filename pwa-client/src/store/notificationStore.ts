@@ -7,12 +7,13 @@ export interface InvoiceNotification {
   supplierId?: string;
   supplierName?: string;
   invoiceNumber?: string;
+  message?: string;
   errorMessage?: string;
   read: boolean;
   receivedAt: string;
 }
 
-const STORAGE_KEY = 'fcm_notifications';
+const STORAGE_KEY = 'app_notifications';
 
 const loadFromStorage = (): InvoiceNotification[] => {
   try {
@@ -34,8 +35,6 @@ const saveToStorage = (notifications: InvoiceNotification[]) => {
 export const useNotificationStore = defineStore('notifications', {
   state: () => ({
     notifications: loadFromStorage() as InvoiceNotification[],
-    fcmToken: null as string | null,
-    fcmRegistered: false,
   }),
 
   getters: {
@@ -81,15 +80,5 @@ export const useNotificationStore = defineStore('notifications', {
       this.notifications = [];
       saveToStorage(this.notifications);
     },
-
-    setFcmToken(token: string) {
-      this.fcmToken = token;
-    },
-
-    setFcmRegistered(registered: boolean) {
-      this.fcmRegistered = registered;
-    },
   },
 });
-
-

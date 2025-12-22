@@ -11,8 +11,24 @@
           <RouterLink to="/upload" class="nav-link hover:text-primary-600">Σάρωση</RouterLink>
           <RouterLink to="/suppliers" class="nav-link hover:text-primary-600">Προμηθευτές</RouterLink>
 
+          <!-- Notification Bell (desktop) -->
+          <RouterLink
+            to="/notifications"
+            class="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span
+              v-if="unreadCount > 0"
+              class="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white"
+            >
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </RouterLink>
+
           <!-- User menu (desktop) -->
-          <div class="relative ml-2">
+          <div class="relative ml-1">
             <button
               type="button"
               class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 transition hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
@@ -54,17 +70,47 @@
           </div>
         </nav>
 
-        <!-- Mobile: Hamburger Menu Button -->
-        <button
-          v-if="isAuthenticated"
-          type="button"
-          class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 sm:hidden"
-          @click="sidebarOpen = true"
-        >
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <!-- Mobile: Right side actions -->
+        <div v-if="isAuthenticated" class="flex items-center gap-1 sm:hidden">
+          <!-- Scan/Upload shortcut (mobile) -->
+          <RouterLink
+            to="/upload"
+            class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
+            :class="{ 'bg-primary-50 text-primary-600': $route.path === '/upload' }"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </RouterLink>
+
+          <!-- Notification Bell (mobile) -->
+          <RouterLink
+            to="/notifications"
+            class="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span
+              v-if="unreadCount > 0"
+              class="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white"
+            >
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </RouterLink>
+
+          <!-- Hamburger Menu Button -->
+          <button
+            type="button"
+            class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
+            @click="sidebarOpen = true"
+          >
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
 
         <!-- Unauthenticated nav -->
         <nav v-if="!isAuthenticated" class="flex items-center gap-4 text-sm font-medium text-slate-600">
@@ -131,6 +177,28 @@
               <component :is="link.icon" class="h-5 w-5" />
               {{ link.label }}
             </RouterLink>
+
+            <!-- Notifications link in sidebar -->
+            <RouterLink
+              to="/notifications"
+              class="mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              :class="{ 'bg-primary-50 text-primary-600': $route.path === '/notifications' }"
+              @click="sidebarOpen = false"
+            >
+              <div class="relative">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span
+                  v-if="unreadCount > 0"
+                  class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500"
+                />
+              </div>
+              Ειδοποιήσεις
+              <span v-if="unreadCount > 0" class="ml-auto rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-600">
+                {{ unreadCount }}
+              </span>
+            </RouterLink>
           </nav>
 
           <!-- Logout Button -->
@@ -158,12 +226,12 @@
     </main>
 
     <!-- Toast Notifications -->
-    <div class="pointer-events-none fixed inset-x-0 top-4 flex justify-center">
-      <transition-group name="toast" tag="div" class="space-y-2">
+    <div class="pointer-events-none fixed inset-x-0 top-16 z-[100] flex justify-center sm:top-20">
+      <transition-group name="toast" tag="div" class="space-y-2 px-4">
         <div
           v-for="toast in toasts"
           :key="toast.id"
-          class="pointer-events-auto rounded-2xl bg-slate-900/90 px-5 py-3 text-sm text-white shadow-lg"
+          class="pointer-events-auto max-w-sm rounded-2xl px-5 py-3 text-sm text-white shadow-xl"
           :class="toastClasses(toast.type)"
           @click="dismiss(toast.id)"
         >
@@ -175,23 +243,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, watch } from 'vue';
+import { computed, h, onMounted, ref, watch } from 'vue';
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 
 import { useNotifications } from '@/composables/useNotifications';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useAuth } from '@/composables/useAuth';
+import { useInvoiceNotifications } from '@/composables/useInvoiceNotifications';
 
 const router = useRouter();
 const { toasts, dismiss } = useNotifications();
 const notificationStore = useNotificationStore();
 const { unreadCount } = storeToRefs(notificationStore);
 const { user, isAuthenticated, logout } = useAuth();
+const { initializeNotifications } = useInvoiceNotifications();
 
 // Menu states
 const userMenuOpen = ref(false);
 const sidebarOpen = ref(false);
+
+// Initialize notification listener
+onMounted(() => {
+  initializeNotifications();
+});
 
 // Navigation icons as functional components
 const HomeIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [

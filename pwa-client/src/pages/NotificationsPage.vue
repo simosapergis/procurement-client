@@ -1,6 +1,6 @@
 <template>
   <section class="w-full">
-    <header class="mb-6 flex items-center justify-between">
+    <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p class="text-xs uppercase tracking-wide text-primary-600">Ενημερώσεις</p>
         <h2 class="text-2xl font-semibold text-slate-900">Ειδοποιήσεις</h2>
@@ -12,15 +12,15 @@
         <button
           v-if="unreadCount > 0"
           type="button"
-          class="rounded-xl bg-primary-50 px-4 py-2 text-sm font-medium text-primary-600 transition hover:bg-primary-100"
+          class="rounded-xl bg-primary-50 px-4 py-2 text-sm font-medium text-primary-600 transition hover:bg-primary-100 active:scale-[0.98]"
           @click="markAllAsRead"
         >
-          Σήμανση όλων ως αναγνωσμένα
+          Σήμανση όλων
         </button>
         <button
           v-if="notifications.length > 0"
           type="button"
-          class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 active:scale-[0.98]"
           @click="clearAll"
         >
           Εκκαθάριση
@@ -28,13 +28,13 @@
       </div>
     </header>
 
-    <div v-if="notifications.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
+    <div v-if="notifications.length === 0" class="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
       <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
         <svg class="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       </div>
-      <p class="text-sm text-slate-500">Δεν υπάρχουν ειδοποιήσεις</p>
+      <p class="text-sm font-medium text-slate-600">Δεν υπάρχουν ειδοποιήσεις</p>
       <p class="mt-1 text-xs text-slate-400">Θα λάβετε ειδοποιήσεις όταν ολοκληρωθεί η επεξεργασία των τιμολογίων σας</p>
     </div>
 
@@ -42,7 +42,7 @@
       <article
         v-for="notification in notifications"
         :key="notification.id"
-        class="rounded-2xl bg-white p-4 shadow-sm transition"
+        class="cursor-pointer rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md"
         :class="{ 'border-l-4 border-l-primary-500': !notification.read }"
         @click="handleNotificationClick(notification)"
       >
@@ -83,15 +83,16 @@
               </span>
             </div>
 
+            <!-- Message from backend -->
+            <p v-if="notification.message" class="mt-1 text-sm text-slate-700">
+              {{ notification.message }}
+            </p>
+
             <p v-if="notification.supplierName" class="mt-1 text-sm text-slate-600">
               {{ notification.supplierName }}
               <span v-if="notification.invoiceNumber" class="text-slate-400">
                 — ΤΔΑ-{{ notification.invoiceNumber }}
               </span>
-            </p>
-
-            <p v-if="notification.errorMessage" class="mt-1 text-sm text-rose-600">
-              {{ notification.errorMessage }}
             </p>
 
             <p class="mt-1 text-xs text-slate-400">
@@ -100,7 +101,7 @@
           </div>
 
           <!-- Unread indicator -->
-          <div v-if="!notification.read" class="h-2 w-2 shrink-0 rounded-full bg-primary-500" />
+          <div v-if="!notification.read" class="h-2.5 w-2.5 shrink-0 rounded-full bg-primary-500" />
         </div>
       </article>
     </div>
@@ -108,15 +109,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 
 import { useNotificationStore, type InvoiceNotification } from '@/store/notificationStore';
+import { useInvoiceNotifications } from '@/composables/useInvoiceNotifications';
 
 const store = useNotificationStore();
 const { sortedNotifications: notifications, unreadCount } = storeToRefs(store);
+const { markAsSeen } = useInvoiceNotifications();
 
 const markAllAsRead = () => {
+  // Mark all as seen in Firestore
+  notifications.value.forEach((n) => {
+    if (!n.read) {
+      markAsSeen(n.invoiceId);
+    }
+  });
   store.markAllAsRead();
 };
 
@@ -127,6 +135,7 @@ const clearAll = () => {
 const handleNotificationClick = (notification: InvoiceNotification) => {
   if (!notification.read) {
     store.markAsRead(notification.id);
+    markAsSeen(notification.invoiceId);
   }
   // Could navigate to invoice details here if needed
   // router.push(`/invoices/${notification.invoiceId}`);
@@ -152,5 +161,3 @@ const formatTime = (isoString: string) => {
   });
 };
 </script>
-
-
