@@ -152,7 +152,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 import ExpiryBadge from '@/components/ExpiryBadge.vue';
 import Loader from '@/components/Loader.vue';
@@ -163,9 +164,11 @@ import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import { PaymentError, updatePaymentStatus } from '@/services/api/updatePaymentStatus';
 import { formatCurrency } from '@/utils/date';
 
+const route = useRoute();
 const { fetchUnpaidInvoices } = useFirestore();
 
 const invoices = ref<Invoice[]>([]);
+const lastFetchTime = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
@@ -263,6 +266,7 @@ const refreshInvoices = async () => {
   error.value = null;
   try {
     invoices.value = await fetchUnpaidInvoices();
+    lastFetchTime.value = Date.now();
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Αδυναμία φόρτωσης τιμολογίων';
   } finally {
@@ -271,6 +275,20 @@ const refreshInvoices = async () => {
 };
 
 onMounted(refreshInvoices);
+
+// Auto-refresh when navigating back to this page (data might be stale)
+watch(
+  () => route.path,
+  (newPath) => {
+    if (newPath === '/' || newPath === '/home') {
+      const now = Date.now();
+      // Only refresh if more than 30 seconds since last fetch
+      if (now - lastFetchTime.value > 30000) {
+        refreshInvoices();
+      }
+    }
+  }
+);
 </script>
 
 <style scoped>

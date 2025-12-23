@@ -81,7 +81,7 @@
       :is-open="detailModalOpen"
       :invoice="selectedInvoice"
       @close="clearInvoiceSelection"
-      @edit="handleEdit"
+      @updated="handleInvoiceUpdated"
     />
 
     <!-- Payment Modal -->
@@ -121,7 +121,7 @@ const route = useRoute();
 const router = useRouter();
 const supplierStore = useSupplierStore();
 const { hydrate } = useSuppliers();
-const { invoices, loading: invoiceLoading, error: invoiceError, loadInvoices } = useSupplierInvoices();
+const { invoices, loading: invoiceLoading, error: invoiceError, loadInvoices, updateInvoice } = useSupplierInvoices();
 
 const supplierId = computed(() => route.params.supplierId as string);
 const supplier = ref<Supplier | null>(null);
@@ -209,10 +209,12 @@ const openPaymentModal = (invoice: Invoice) => {
   paymentModalOpen.value = true;
 };
 
-// Handle edit action (placeholder for now)
-const handleEdit = () => {
-  // TODO: Implement edit functionality
-  console.info('[SupplierInvoicesPage] Edit invoice:', selectedInvoice.value?.id);
+// Handle invoice updated from detail view
+const handleInvoiceUpdated = (updatedInvoice: Invoice) => {
+  // Update the invoice in the local array
+  updateInvoice(updatedInvoice);
+  // Also update the selected invoice ref so the modal shows updated data
+  selectedInvoice.value = updatedInvoice;
 };
 
 const closePaymentModal = () => {

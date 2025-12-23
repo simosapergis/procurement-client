@@ -24,7 +24,22 @@ export function useSupplierInvoices() {
     }
   };
 
-  return { invoices, loading, error, loadInvoices };
+  /**
+   * Update a single invoice in the local invoices array
+   */
+  const updateInvoice = (updatedInvoice: Invoice) => {
+    const index = invoices.value.findIndex((inv) => inv.id === updatedInvoice.id);
+    if (index !== -1) {
+      invoices.value[index] = { ...invoices.value[index], ...updatedInvoice };
+    }
+  };
+
+  /**
+   * Remove an invoice from the local array (e.g., after full payment)
+   */
+  const removeInvoice = (invoiceId: string) => {
+    invoices.value = invoices.value.filter((inv) => inv.id !== invoiceId);
+  };
+
+  return { invoices, loading, error, loadInvoices, updateInvoice, removeInvoice };
 }
-
-
