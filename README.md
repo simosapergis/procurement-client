@@ -14,3 +14,8 @@ npm run build
 
 # .2 deploy
 firebase deploy --only hosting
+
+
+# deploy on a staging env
+firebase hosting:channel:deploy notifications --only hosting
+firebase hosting:channel:deploy notifications --expires 7d
