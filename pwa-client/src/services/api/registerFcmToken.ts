@@ -2,7 +2,7 @@ import { getAuth } from 'firebase/auth';
 
 import { firebaseApp } from '@/services/firebase';
 
-const endpoint = 'https://us-central1-clean-abacus-482115-a1.cloudfunctions.net/registerFcmToken';
+const endpoint = 'https://us-central1-level-approach-479119-b3.cloudfunctions.net/registerFcmToken';
 const auth = getAuth(firebaseApp);
 
 export interface RegisterTokenRequest {
