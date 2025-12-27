@@ -2,7 +2,7 @@
   <div class="flex min-h-screen flex-col bg-slate-100">
     <header class="sticky top-0 z-50 bg-white shadow-sm">
       <div class="app-header mx-auto flex max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4">
-        <RouterLink to="/" class="app-logo text-base font-semibold text-primary-600 sm:text-lg">MyLogia</RouterLink>
+        <RouterLink to="/" class="app-logo text-base font-semibold text-primary-600 sm:text-lg">MyLogia Demo</RouterLink>
 
         <!-- Desktop Navigation (hidden on mobile) -->
         <nav v-if="isAuthenticated" class="hidden items-center gap-4 text-sm font-medium text-slate-600 sm:flex">
