@@ -36,7 +36,7 @@ export class PaymentError extends Error {
   }
 }
 
-const endpoint = 'https://us-central1-level-approach-479119-b3.cloudfunctions.net/updatePaymentStatus';
+const endpoint = 'https://us-central1-clean-abacus-482115-a1.cloudfunctions.net/updatePaymentStatus';
 const auth = getAuth(firebaseApp);
 
 export const updatePaymentStatus = async (payload: PaymentRequest): Promise<PaymentResponse> => {
