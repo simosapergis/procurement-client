@@ -137,7 +137,8 @@
             <article
               v-for="invoice in group.invoices"
               :key="invoice.id"
-              class="rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-slate-100"
+              class="cursor-pointer rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:bg-slate-100 hover:shadow-sm"
+              @click="openDetailModal(invoice)"
             >
               <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0 flex-1">
@@ -158,12 +159,22 @@
         Δεν βρέθηκαν τιμολόγια για την επιλεγμένη περίοδο.
       </p>
     </div>
+
+    <!-- Invoice Detail Modal -->
+    <InvoiceDetailView
+      v-if="detailInvoice"
+      :is-open="detailModalOpen"
+      :invoice="detailInvoice"
+      @close="closeDetailModal"
+      @updated="handleInvoiceUpdated"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
+import InvoiceDetailView from '@/components/InvoiceDetailView.vue';
 import Loader from '@/components/Loader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useFirestore } from '@/composables/useFirestore';
@@ -180,6 +191,10 @@ const error = ref<string | null>(null);
 const invoices = ref<Invoice[]>([]);
 const hasSearched = ref(false);
 const isCollapsed = ref(false);
+
+// Invoice detail modal state
+const detailModalOpen = ref(false);
+const detailInvoice = ref<Invoice | null>(null);
 
 const quickPeriods = [
   { label: 'Σήμερα', days: 0 },
@@ -254,6 +269,29 @@ const groupedInvoices = computed(() => {
   
   return sortedGroups;
 });
+
+// Invoice detail functions
+const openDetailModal = (invoice: Invoice) => {
+  detailInvoice.value = invoice;
+  detailModalOpen.value = true;
+};
+
+const closeDetailModal = () => {
+  detailModalOpen.value = false;
+  setTimeout(() => {
+    detailInvoice.value = null;
+  }, 300);
+};
+
+const handleInvoiceUpdated = (updatedInvoice: Invoice) => {
+  // Update the invoice in the local array
+  const index = invoices.value.findIndex((inv) => inv.id === updatedInvoice.id);
+  if (index !== -1) {
+    invoices.value[index] = { ...invoices.value[index], ...updatedInvoice };
+  }
+  // Update the detail modal invoice
+  detailInvoice.value = updatedInvoice;
+};
 
 const selectQuickPeriod = (period: { label: string; days: number }) => {
   selectedPeriod.value = period.label;

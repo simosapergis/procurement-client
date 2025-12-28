@@ -53,7 +53,8 @@
       <article
         v-for="invoice in invoices"
         :key="invoice.id"
-        class="rounded-2xl bg-white p-4 shadow-sm"
+        class="cursor-pointer rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md"
+        @click="openDetailModal(invoice)"
       >
         <!-- Mobile Layout -->
         <div class="sm:hidden">
@@ -133,6 +134,15 @@
       Δεν βρέθηκαν ανεξόφλητα τιμολόγια.
     </p>
 
+    <!-- Invoice Detail Modal -->
+    <InvoiceDetailView
+      v-if="detailInvoice"
+      :is-open="detailModalOpen"
+      :invoice="detailInvoice"
+      @close="closeDetailModal"
+      @updated="handleInvoiceUpdated"
+    />
+
     <!-- Payment Modal -->
     <PaymentModal
       :is-open="paymentModalOpen"
@@ -156,6 +166,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import ExpiryBadge from '@/components/ExpiryBadge.vue';
+import InvoiceDetailView from '@/components/InvoiceDetailView.vue';
 import Loader from '@/components/Loader.vue';
 import PaymentModal from '@/components/PaymentModal.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -172,6 +183,10 @@ const lastFetchTime = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
+// Invoice detail modal state
+const detailModalOpen = ref(false);
+const detailInvoice = ref<Invoice | null>(null);
+
 // Payment modal state
 const paymentModalOpen = ref(false);
 const selectedInvoice = ref<Invoice | null>(null);
@@ -187,6 +202,29 @@ const uniqueSupplierCount = computed(() => {
   const supplierIds = new Set(invoices.value.map((inv) => inv.supplierId ?? inv.supplierTaxNumber));
   return supplierIds.size;
 });
+
+// Invoice detail functions
+const openDetailModal = (invoice: Invoice) => {
+  detailInvoice.value = invoice;
+  detailModalOpen.value = true;
+};
+
+const closeDetailModal = () => {
+  detailModalOpen.value = false;
+  setTimeout(() => {
+    detailInvoice.value = null;
+  }, 300);
+};
+
+const handleInvoiceUpdated = (updatedInvoice: Invoice) => {
+  // Update the invoice in the local array
+  const index = invoices.value.findIndex((inv) => inv.id === updatedInvoice.id);
+  if (index !== -1) {
+    invoices.value[index] = { ...invoices.value[index], ...updatedInvoice };
+  }
+  // Update the detail modal invoice
+  detailInvoice.value = updatedInvoice;
+};
 
 const openPaymentModal = (invoice: Invoice) => {
   selectedInvoice.value = invoice;
