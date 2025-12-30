@@ -36,7 +36,7 @@ export class PaymentError extends Error {
   }
 }
 
-const endpoint = 'https://europe-west6-clean-abacus-482115-a1.cloudfunctions.net/updatePaymentStatus';
+const endpoint = import.meta.env.VITE_UPDATE_PAYMENT_STATUS_ENDPOINT ?? '';
 const auth = getAuth(firebaseApp);
 
 export const updatePaymentStatus = async (payload: PaymentRequest): Promise<PaymentResponse> => {
