@@ -3,8 +3,8 @@ A smart procurement &amp; invoicing automation platform for small and medium bus
 
 # set cors for bucket upload if not set already
 # edit configuration in cors.json - add IP or Host name to enable CORS 
-gsutil cors set cors.json gs://clean-abacus-482115-a1.firebasestorage.app
-gsutil cors get gs://clean-abacus-482115-a1.firebasestorage.app
+gsutil cors set cors.json gs://sp-demo-procurement.firebasestorage.app
+gsutil cors get gs://sp-demo-procurement.firebasestorage.app
 
 
 # Deploy to Google Host

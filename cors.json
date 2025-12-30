@@ -2,8 +2,8 @@
   {
     "origin": [
       "http://localhost:5173",
-      "https://clean-abacus-482115-a1.web.app",
-      "https://clean-abacus-482115-a1.firebaseapp.com"
+      "https://sp-demo-procurement.web.app",
+      "https://sp-demo-procurement.firebaseapp.com"
     ],
     "method": ["GET", "PUT", "POST", "HEAD", "OPTIONS"],
     "responseHeader": ["Content-Type", "Authorization"],
