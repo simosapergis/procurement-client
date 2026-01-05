@@ -26,11 +26,45 @@
       </p>
 
       <div class="mt-6 space-y-3">
-        <CameraButton :disabled="!canUseCamera" @select="handleSelection">
-          {{ canAddPages ? 'Λήψη επόμενης σελίδας' : 'Όλες οι σελίδες καταγράφηκαν' }}
-        </CameraButton>
+        <div class="flex flex-col gap-3">
+          <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 sm:hidden">
+            <input
+              type="checkbox"
+              v-model="useGalleryMode"
+              class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+            />
+            Από γκαλερί
+          </label>
+          <div class="relative">
+            <CameraButton
+              v-if="!useGalleryMode"
+              :disabled="!canUseCamera"
+              @select="handleSelection"
+            >
+              {{ mainActionLabel }}
+            </CameraButton>
+            <button
+              v-else
+              type="button"
+              class="w-full rounded-xl bg-primary-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="!canUseGallery"
+              @click="triggerGalleryPicker"
+            >
+              {{ mainActionLabel }}
+            </button>
+          </div>
+        </div>
         <p class="text-sm text-slate-500">{{ remainingPagesMessage }}</p>
       </div>
+
+      <input
+        ref="galleryInput"
+        type="file"
+        accept="image/*"
+        multiple
+        class="hidden"
+        @change="handleGallerySelection"
+      />
 
       <div v-if="pages.length" class="mt-6 rounded-2xl border border-slate-200">
         <ul class="divide-y divide-slate-100">
@@ -122,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import CameraButton from '@/components/CameraButton.vue';
 import Loader from '@/components/Loader.vue';
@@ -147,6 +181,26 @@ const {
   hasPendingUploads,
 } = useInvoiceUpload();
 
+const galleryInput = ref<HTMLInputElement | null>(null);
+const useGalleryMode = ref(false);
+
+const handleGallerySelection = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const files = input.files ? Array.from(input.files) : [];
+  if (!files.length) return;
+
+  for (const file of files) {
+    await addPage(file);
+  }
+
+  input.value = '';
+};
+
+const triggerGalleryPicker = () => {
+  if (!galleryInput.value || !canUseGallery.value) return;
+  galleryInput.value.click();
+};
+
 const handleSelection = async (file: File) => {
   await addPage(file);
 };
@@ -162,7 +216,14 @@ const handleTotalPagesInput = (event: Event) => {
 };
 
 const isBusy = computed(() => ['validating', 'uploading'].includes(status.value));
-const canUseCamera = computed(() => canAddPages.value && !isBusy.value);
+const canUseGallery = computed(() => canAddPages.value && !isBusy.value);
+const canUseCamera = computed(() => canAddPages.value && !isBusy.value && !useGalleryMode.value);
+const mainActionLabel = computed(() => {
+  if (!canAddPages.value) {
+    return 'Όλες οι σελίδες καταγράφηκαν';
+  }
+  return useGalleryMode.value ? 'Επιλογή επόμενης σελίδας' : 'Λήψη επόμενης σελίδας';
+});
 
 const statusBadge = computed(() => {
   switch (status.value) {
