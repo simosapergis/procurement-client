@@ -18,6 +18,12 @@ export const useSupplierStore = defineStore('suppliers', {
       this.suppliers = entries;
       this.initialized = true;
     },
+    updateSupplier(updatedSupplier: Supplier) {
+      const index = this.suppliers.findIndex((s) => s.id === updatedSupplier.id);
+      if (index !== -1) {
+        this.suppliers[index] = { ...this.suppliers[index], ...updatedSupplier };
+      }
+    },
     setLoading(value: boolean) {
       this.loading = value;
     },

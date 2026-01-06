@@ -44,6 +44,32 @@
       </div>
     </div>
 
+    <!-- Suppliers Delivering Today -->
+    <div v-if="suppliersDeliveringToday.length > 0" class="mb-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-4 shadow-sm">
+      <div class="mb-3 flex items-center gap-2">
+        <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+        <h3 class="text-sm font-semibold text-emerald-800">Σημερινές Παραδόσεις</h3>
+        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+          {{ suppliersDeliveringToday.length }}
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <router-link
+          v-for="supplier in suppliersDeliveringToday"
+          :key="supplier.id"
+          :to="{ name: 'supplier-invoices', params: { supplierId: supplier.id } }"
+          class="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-emerald-50 hover:text-emerald-700"
+        >
+          <span class="truncate">{{ supplier.name }}</span>
+          <span v-if="supplier.delivery?.from" class="text-xs text-slate-400">
+            {{ formatDeliveryTime(supplier.delivery) }}
+          </span>
+        </router-link>
+      </div>
+    </div>
+
     <Loader v-if="loading" label="Φόρτωση τιμολογίων..." />
     <p v-else-if="error" class="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
       {{ error }}
@@ -162,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import ExpiryBadge from '@/components/ExpiryBadge.vue';
@@ -172,13 +198,15 @@ import PaymentModal from '@/components/PaymentModal.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useFirestore } from '@/composables/useFirestore';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
+import type { Supplier } from '@/modules/suppliers/Supplier';
 import { PaymentError, updatePaymentStatus } from '@/services/api/updatePaymentStatus';
 import { formatCurrency } from '@/utils/date';
 
 const route = useRoute();
-const { fetchUnpaidInvoices } = useFirestore();
+const { fetchUnpaidInvoices, fetchSuppliersDeliveringToday, needsDeliveryCacheRefresh } = useFirestore();
 
 const invoices = ref<Invoice[]>([]);
+const suppliersDeliveringToday = ref<Supplier[]>([]);
 const lastFetchTime = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -202,6 +230,21 @@ const uniqueSupplierCount = computed(() => {
   const supplierIds = new Set(invoices.value.map((inv) => inv.supplierId ?? inv.supplierTaxNumber));
   return supplierIds.size;
 });
+
+// Format delivery time for display
+const formatDeliveryTime = (delivery: Supplier['delivery']): string => {
+  if (!delivery) return '';
+  const formatTime = (time?: { hour: number; minute: number }) => {
+    if (!time) return '';
+    return `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`;
+  };
+  const from = formatTime(delivery.from);
+  const to = formatTime(delivery.to);
+  if (from && to) return `${from}-${to}`;
+  if (from) return `από ${from}`;
+  if (to) return `έως ${to}`;
+  return '';
+};
 
 // Invoice detail functions
 const openDetailModal = (invoice: Invoice) => {
@@ -303,7 +346,13 @@ const refreshInvoices = async () => {
   loading.value = true;
   error.value = null;
   try {
-    invoices.value = await fetchUnpaidInvoices();
+    // Fetch both invoices and suppliers delivering today in parallel
+    const [fetchedInvoices, fetchedSuppliers] = await Promise.all([
+      fetchUnpaidInvoices(),
+      fetchSuppliersDeliveringToday(),
+    ]);
+    invoices.value = fetchedInvoices;
+    suppliersDeliveringToday.value = fetchedSuppliers;
     lastFetchTime.value = Date.now();
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Αδυναμία φόρτωσης τιμολογίων';
@@ -312,15 +361,45 @@ const refreshInvoices = async () => {
   }
 };
 
-onMounted(refreshInvoices);
+// Refresh suppliers if day has changed (midnight case)
+const refreshSuppliersIfDayChanged = async () => {
+  if (needsDeliveryCacheRefresh()) {
+    console.info('[OverviewPage] Day changed, refreshing suppliers delivering today');
+    try {
+      suppliersDeliveringToday.value = await fetchSuppliersDeliveringToday();
+    } catch (err) {
+      console.error('[OverviewPage] Failed to refresh suppliers:', err);
+    }
+  }
+};
+
+// Handle visibility change (when user tabs back or resumes app)
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    refreshSuppliersIfDayChanged();
+  }
+};
+
+onMounted(() => {
+  refreshInvoices();
+  // Listen for visibility changes (handles midnight case when app resumes)
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+});
 
 // Auto-refresh when navigating back to this page (data might be stale)
 watch(
   () => route.path,
   (newPath) => {
     if (newPath === '/' || newPath === '/home') {
+      // Always check if day changed for suppliers
+      refreshSuppliersIfDayChanged();
+
       const now = Date.now();
-      // Only refresh if more than 30 seconds since last fetch
+      // Only refresh invoices if more than 30 seconds since last fetch
       if (now - lastFetchTime.value > 30000) {
         refreshInvoices();
       }

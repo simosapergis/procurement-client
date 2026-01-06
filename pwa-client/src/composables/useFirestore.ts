@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   where,
+  limit,
 } from 'firebase/firestore';
 
 import { firebaseApp } from '@/services/firebase';
@@ -17,6 +18,28 @@ import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import type { Supplier } from '@/modules/suppliers/Supplier';
 
 const db = getFirestore(firebaseApp);
+
+// Cache for suppliers delivering today (shared across composable instances)
+let suppliersDeliveringTodayCache: Supplier[] | null = null;
+let cacheDay: number | null = null;
+
+// Helper to get today's day of week (ISO 8601: 1=Monday to 7=Sunday)
+const getTodayDayOfWeek = (): number => {
+  const day = new Date().getDay(); // JS: 0=Sunday, 1=Monday, ..., 6=Saturday
+  return day === 0 ? 7 : day; // Convert to ISO 8601
+};
+
+// Check if cache is still valid for today
+const isCacheFresh = (): boolean => {
+  return cacheDay === getTodayDayOfWeek();
+};
+
+// Clear delivery cache (call when delivery data changes)
+export const clearDeliveryCache = (): void => {
+  suppliersDeliveringTodayCache = null;
+  cacheDay = null;
+  console.info('[Firestore] Delivery cache cleared');
+};
 
 export function useFirestore() {
   const invoicesRef = collection(db, 'invoices');
@@ -105,6 +128,50 @@ export function useFirestore() {
     return invoices;
   };
 
+  /**
+   * Fetch suppliers delivering today with memoization.
+   * Cache is invalidated when:
+   * - The day changes (midnight)
+   * - clearDeliveryCache() is called (after delivery data updates)
+   */
+  const fetchSuppliersDeliveringToday = async (): Promise<Supplier[]> => {
+    // Return cached data if still valid for today
+    if (isCacheFresh() && suppliersDeliveringTodayCache) {
+      console.info('[Firestore] Using cached suppliers delivering today', suppliersDeliveringTodayCache.length);
+      return suppliersDeliveringTodayCache;
+    }
+
+    const dayOfWeek = getTodayDayOfWeek();
+    console.info('[Firestore] Fetching suppliers for day of week:', dayOfWeek);
+
+    const q = query(
+      suppliersRef,
+      where('delivery.dayOfWeek', '==', dayOfWeek),
+      orderBy('name', 'asc'),
+      limit(10)
+    );
+
+    const snapshot = await getDocs(q);
+    const suppliers = snapshot.docs.map((docSnapshot) => ({
+      ...(docSnapshot.data() as Supplier),
+      id: docSnapshot.id,
+    }));
+
+    // Update cache
+    suppliersDeliveringTodayCache = suppliers;
+    cacheDay = dayOfWeek;
+
+    console.info('[Firestore] Fetched suppliers delivering today:', suppliers.length);
+    return suppliers;
+  };
+
+  /**
+   * Check if delivery cache needs refresh (day changed)
+   */
+  const needsDeliveryCacheRefresh = (): boolean => {
+    return !isCacheFresh();
+  };
+
   return {
     saveInvoiceRecord,
     fetchInvoices,
@@ -113,6 +180,8 @@ export function useFirestore() {
     fetchSupplierInvoice,
     fetchUnpaidInvoices,
     fetchInvoicesByDateRange,
+    fetchSuppliersDeliveringToday,
+    needsDeliveryCacheRefresh,
     subscribeToInvoice,
   };
 }

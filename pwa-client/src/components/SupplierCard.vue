@@ -3,8 +3,8 @@
     <header class="flex items-center justify-between gap-3">
       <div class="min-w-0 flex-1">
         <h3 class="text-base font-semibold text-slate-900">{{ supplier.name }}</h3>
-        <p v-if="supplier.taxId || supplier.id" class="mt-0.5 text-xs text-slate-400">
-          ΑΦΜ: {{ supplier.taxId ?? supplier.id }}
+        <p v-if="supplier.supplierTaxNumber || supplier.id" class="mt-0.5 text-xs text-slate-400">
+          ΑΦΜ: {{ supplier.supplierTaxNumber ?? supplier.id }}
         </p>
       </div>
       <span v-if="supplier.status" :class="badgeClass">{{ statusLabel }}</span>

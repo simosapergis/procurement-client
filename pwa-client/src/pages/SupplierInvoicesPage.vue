@@ -19,11 +19,11 @@
           <p class="text-xs font-medium uppercase tracking-widest text-primary-200">ΠΡΟΜΗΘΕΥΤΗΣ</p>
           <h1 class="mt-1 text-2xl font-bold sm:text-3xl">{{ supplier.name }}</h1>
           <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-primary-100">
-            <span v-if="supplier.taxId || supplier.id" class="flex items-center gap-1.5">
+            <span v-if="supplier.supplierTaxNumber || supplier.id" class="flex items-center gap-1.5">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              ΑΦΜ: {{ supplier.taxId ?? supplier.id }}
+              ΑΦΜ: {{ supplier.supplierTaxNumber ?? supplier.id }}
             </span>
             <span v-if="supplier.contactEmail" class="flex items-center gap-1.5">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,11 +37,35 @@
               </svg>
               {{ supplier.contactPhone }}
             </span>
+            <!-- Delivery Info -->
+            <span v-if="hasDeliveryInfo" class="flex items-center gap-1.5">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Παραδίδει: {{ deliveryDayLabel }}<template v-if="deliveryTimeRange">, {{ deliveryTimeRange }}</template>
+            </span>
           </div>
         </div>
-        <span v-if="supplier.status" :class="statusBadgeClass">
-          {{ statusLabel }}
-        </span>
+
+        <!-- Right side: Status + Edit button -->
+        <div class="flex flex-col items-end gap-3">
+          <!-- Edit Button -->
+          <button
+            type="button"
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20"
+            aria-label="Επεξεργασία προμηθευτή"
+            @click="openSupplierEditModal"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+
+          <!-- Status Badge -->
+          <span v-if="supplier.status" :class="statusBadgeClass">
+            {{ statusLabel }}
+          </span>
+        </div>
       </div>
     </header>
 
@@ -84,6 +108,15 @@
       @updated="handleInvoiceUpdated"
     />
 
+    <!-- Supplier Edit Modal -->
+    <SupplierEditModal
+      v-if="supplier"
+      :is-open="supplierEditModalOpen"
+      :supplier="supplier"
+      @close="closeSupplierEditModal"
+      @updated="handleSupplierUpdated"
+    />
+
     <!-- Payment Modal -->
     <PaymentModal
       :is-open="paymentModalOpen"
@@ -110,6 +143,8 @@ import InvoiceDetailView from '@/components/InvoiceDetailView.vue';
 import InvoicePreviewCard from '@/components/InvoicePreviewCard.vue';
 import Loader from '@/components/Loader.vue';
 import PaymentModal from '@/components/PaymentModal.vue';
+import SupplierEditModal from '@/components/SupplierEditModal.vue';
+import { clearDeliveryCache } from '@/composables/useFirestore';
 import { useSupplierInvoices } from '@/composables/useSupplierInvoices';
 import { useSuppliers } from '@/composables/useSuppliers';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
@@ -131,6 +166,9 @@ const supplierLoading = ref(true);
 const selectedInvoice = ref<Invoice | null>(null);
 const detailModalOpen = ref(false);
 
+// Supplier edit modal state
+const supplierEditModalOpen = ref(false);
+
 // Payment modal state
 const paymentModalOpen = ref(false);
 const paymentInvoice = ref<Invoice | null>(null);
@@ -138,6 +176,52 @@ const modalStatus = ref<'form' | 'success' | 'error'>('form');
 const modalErrorMessage = ref('');
 const modalErrorDetails = ref<string[]>([]);
 const submitting = ref(false);
+
+// Days of week mapping for display
+const daysOfWeekLabels: Record<number, string> = {
+  1: 'Δευτέρα',
+  2: 'Τρίτη',
+  3: 'Τετάρτη',
+  4: 'Πέμπτη',
+  5: 'Παρασκευή',
+  6: 'Σάββατο',
+  7: 'Κυριακή',
+};
+
+// Delivery info computed properties
+const hasDeliveryInfo = computed(() => {
+  return supplier.value?.delivery?.dayOfWeek !== undefined;
+});
+
+const deliveryDayLabel = computed(() => {
+  const dayOfWeek = supplier.value?.delivery?.dayOfWeek;
+  if (dayOfWeek === undefined) return '';
+  return daysOfWeekLabels[dayOfWeek] ?? '';
+});
+
+const formatTime = (hour?: number, minute?: number): string => {
+  if (hour === undefined) return '';
+  const h = hour.toString().padStart(2, '0');
+  const m = (minute ?? 0).toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
+
+const deliveryTimeRange = computed(() => {
+  const delivery = supplier.value?.delivery;
+  if (!delivery) return '';
+
+  const fromTime = formatTime(delivery.from?.hour, delivery.from?.minute);
+  const toTime = formatTime(delivery.to?.hour, delivery.to?.minute);
+
+  if (fromTime && toTime) {
+    return `${fromTime} - ${toTime}`;
+  } else if (fromTime) {
+    return `από ${fromTime}`;
+  } else if (toTime) {
+    return `έως ${toTime}`;
+  }
+  return '';
+});
 
 const statusBadgeClass = computed(() => {
   const base = 'rounded-full px-3 py-1 text-xs font-semibold';
@@ -198,6 +282,24 @@ const clearInvoiceSelection = () => {
   setTimeout(() => {
     selectedInvoice.value = null;
   }, 300);
+};
+
+// Supplier edit modal functions
+const openSupplierEditModal = () => {
+  supplierEditModalOpen.value = true;
+};
+
+const closeSupplierEditModal = () => {
+  supplierEditModalOpen.value = false;
+};
+
+const handleSupplierUpdated = (updatedSupplier: Supplier) => {
+  // Update local state
+  supplier.value = updatedSupplier;
+  // Also update the store
+  supplierStore.updateSupplier(updatedSupplier);
+  // Clear delivery cache so overview page fetches fresh data
+  clearDeliveryCache();
 };
 
 // Payment modal functions
@@ -297,4 +399,3 @@ onMounted(() => {
   loadSupplierData();
 });
 </script>
-
