@@ -95,7 +95,7 @@
                     placeholder="Όνομα προμηθευτή"
                   />
                   <span v-else class="text-lg font-semibold text-slate-900">
-                    {{ invoice.supplierName ?? '—' }}
+                  {{ invoice.supplierName ?? '—' }}
                   </span>
                 </dd>
               </div>
@@ -112,7 +112,7 @@
                     placeholder="ΑΦΜ"
                   />
                   <span v-else class="text-lg font-semibold text-slate-900">
-                    {{ invoice.supplierTaxNumber ?? '—' }}
+                  {{ invoice.supplierTaxNumber ?? '—' }}
                   </span>
                 </dd>
               </div>
@@ -129,11 +129,11 @@
                     placeholder="Αριθμός τιμολογίου"
                   />
                   <span v-else class="text-lg font-semibold text-slate-900">
-                    {{ invoice.invoiceNumber ?? '—' }}
+                  {{ invoice.invoiceNumber ?? '—' }}
                   </span>
                 </dd>
               </div>
-              
+
               <!-- Invoice Date -->
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                 <dt class="text-xs uppercase tracking-wide text-slate-400">HΜΕΡΟΜΗΝΙΑ ΕΚΔΟΣΗΣ</dt>
@@ -174,7 +174,7 @@
                     />
                   </div>
                   <span v-else class="text-lg font-semibold text-slate-900">
-                    € {{ formattedTotal }}
+                  € {{ formattedTotal }}
                   </span>
                 </dd>
               </div>
@@ -325,13 +325,13 @@
 
               <!-- View Mode Footer -->
               <template v-else>
-                <button
-                  type="button"
-                  class="flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"
-                  @click="$emit('close')"
-                >
-                  Κλείσιμο
-                </button>
+              <button
+                type="button"
+                class="flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"
+                @click="$emit('close')"
+              >
+                Κλείσιμο
+              </button>
               </template>
             </div>
           </footer>
@@ -607,7 +607,7 @@ const openPdf = async () => {
     const { downloadUrl } = await requestSignedDownloadUrl({
       filePath: props.invoice.filePath,
     });
-
+ 
     openUrl(downloadUrl);
   } catch (error) {
     console.error('Failed to get PDF URL:', error);

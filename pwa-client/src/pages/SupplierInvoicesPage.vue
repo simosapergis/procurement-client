@@ -62,9 +62,9 @@
           </button>
 
           <!-- Status Badge -->
-          <span v-if="supplier.status" :class="statusBadgeClass">
-            {{ statusLabel }}
-          </span>
+        <span v-if="supplier.status" :class="statusBadgeClass">
+          {{ statusLabel }}
+        </span>
         </div>
       </div>
     </header>

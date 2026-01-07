@@ -2,7 +2,7 @@
   <section class="w-full">
     <header class="mb-6">
       <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-semibold text-slate-900">Σύνοψη</h2>
+      <h2 class="text-2xl font-semibold text-slate-900">Σύνοψη</h2>
         <button
           type="button"
           :disabled="loading"
