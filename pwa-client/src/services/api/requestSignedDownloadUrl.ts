@@ -12,14 +12,15 @@ interface SignedDownloadUrlRequest {
   filePath: string;
 }
 
-const endpoint = import.meta.env.VITE_SIGNED_DOWNLOAD_URL_ENDPOINT ?? '';
+const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
+const SIGNED_DOWNLOAD_URL_PATH = import.meta.env.VITE_SIGNED_DOWNLOAD_URL_PATH ?? 'sign/download';
 const auth = getAuth(firebaseApp);
 
 export const requestSignedDownloadUrl = async (
   payload: SignedDownloadUrlRequest
 ): Promise<SignedDownloadUrlResponse> => {
-  if (!endpoint) {
-    throw new Error('VITE_SIGNED_DOWNLOAD_URL_ENDPOINT is not configured');
+  if (!BASE_URL) {
+    throw new Error('VITE_BASE_URL is not configured');
   }
 
   const user = auth.currentUser;
@@ -28,7 +29,7 @@ export const requestSignedDownloadUrl = async (
   }
 
   const token = await user.getIdToken();
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${BASE_URL}${SIGNED_DOWNLOAD_URL_PATH}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

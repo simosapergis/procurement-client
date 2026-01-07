@@ -24,7 +24,8 @@ interface SignedUrlRequest {
   folder?: string;
 }
 
-const endpoint = import.meta.env.VITE_SIGNED_UPLOAD_URL_ENDPOINT ?? '';
+const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
+const SIGNED_UPLOAD_URL_PATH = import.meta.env.VITE_SIGNED_UPLOAD_URL_PATH ?? 'sign/upload';
 const defaultFolder = import.meta.env.VITE_FIREBASE_BUCKET_FOLDER ?? 'uploads';
 const auth = getAuth(firebaseApp);
 
@@ -35,7 +36,11 @@ export const requestSignedUrl = async (payload: SignedUrlRequest): Promise<Signe
   }
 
   const token = await user.getIdToken();
-  const response = await fetch(endpoint, {
+  if (!BASE_URL) {
+    throw new Error('VITE_BASE_URL is not configured');
+  }
+
+  const response = await fetch(`${BASE_URL}${SIGNED_UPLOAD_URL_PATH}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

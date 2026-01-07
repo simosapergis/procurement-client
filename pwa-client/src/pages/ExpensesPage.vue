@@ -1,0 +1,537 @@
+<template>
+  <section class="w-full">
+    <header class="mb-6">
+      <h2 class="text-2xl font-semibold text-slate-900">Έξοδα</h2>
+      <p class="mt-1 text-sm text-slate-500">Καταχώρηση, αναζήτηση και διαχείριση εξόδων</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="mb-6 flex gap-1 rounded-xl bg-slate-100 p-1">
+      <button
+        type="button"
+        class="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
+        :class="activeTab === 'entry' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+        @click="activeTab = 'entry'"
+      >
+        Καταχώρηση
+      </button>
+      <button
+        type="button"
+        class="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
+        :class="activeTab === 'search' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+        @click="activeTab = 'search'"
+      >
+        Αναζήτηση
+      </button>
+      <button
+        type="button"
+        class="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
+        :class="activeTab === 'recurring' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+        @click="activeTab = 'recurring'; loadRecurringExpenses()"
+      >
+        Πάγια
+      </button>
+    </div>
+
+    <!-- Entry Tab -->
+    <div v-if="activeTab === 'entry'" class="rounded-3xl bg-white p-6 shadow-lg">
+      <h3 class="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <svg class="h-5 w-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Καταχώρηση Εξόδου
+      </h3>
+
+      <!-- Category Selector -->
+      <div class="mb-4">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Κατηγορία</label>
+        <select
+          v-model="expenseCategory"
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+        >
+          <option value="">— Επιλέξτε κατηγορία —</option>
+          <option v-for="(label, key) in manualExpenseCategories" :key="key" :value="key">
+            {{ label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Amount -->
+      <div class="mb-4">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Ποσό</label>
+        <div class="relative">
+          <input
+            v-model.number="expenseAmount"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 pr-12 text-lg font-semibold text-slate-900 transition focus:border-primary-500 focus:outline-none"
+          />
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-medium text-slate-400">€</span>
+        </div>
+      </div>
+
+      <!-- Date -->
+      <div class="mb-4">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Ημερομηνία</label>
+        <input
+          v-model="expenseDate"
+          type="date"
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Περιγραφή (προαιρετικό)</label>
+        <input
+          v-model="expenseDescription"
+          type="text"
+          placeholder="Σημειώσεις..."
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+        />
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="button"
+        :disabled="!canSubmitExpense || isSubmitting"
+        class="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-4 text-lg font-semibold text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        @click="submitExpense"
+      >
+        <svg v-if="isSubmitting" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+        {{ isSubmitting ? 'Καταχώρηση...' : 'Καταχώρηση' }}
+      </button>
+
+      <!-- Messages -->
+      <p v-if="successMessage" class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">
+        {{ successMessage }}
+      </p>
+      <p v-if="errorMessage" class="mt-4 rounded-xl bg-rose-50 p-4 text-sm text-rose-700">
+        {{ errorMessage }}
+      </p>
+    </div>
+
+    <!-- Search Tab -->
+    <div v-if="activeTab === 'search'" class="space-y-6">
+      <!-- Date Range Selector -->
+      <div class="rounded-3xl bg-white p-6 shadow-lg">
+        <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">ΕΠΙΛΟΓΗ ΠΕΡΙΟΔΟΥ</h3>
+        
+        <div class="mb-4 flex flex-wrap gap-2">
+          <button
+            v-for="period in quickPeriods"
+            :key="period.label"
+            type="button"
+            class="rounded-xl px-3 py-2 text-sm font-medium transition active:scale-95"
+            :class="selectedPeriod === period.label
+              ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            @click="selectQuickPeriod(period)"
+          >
+            {{ period.label }}
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Από</label>
+            <input
+              v-model="searchStartDate"
+              type="date"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              @change="selectedPeriod = 'custom'"
+            />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Έως</label>
+            <input
+              v-model="searchEndDate"
+              type="date"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              @change="selectedPeriod = 'custom'"
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          :disabled="!isValidRange || isSearching"
+          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-3 font-semibold text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          @click="searchEntries"
+        >
+          <svg v-if="isSearching" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          {{ isSearching ? 'Αναζήτηση...' : 'Αναζήτηση' }}
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div v-if="hasSearched" class="rounded-3xl bg-white p-6 shadow-lg">
+        <div v-if="reportData" class="mb-6 rounded-xl bg-rose-50 p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-rose-700">Σύνολο Εξόδων</span>
+            <span class="text-2xl font-bold text-rose-700">€ {{ formatCurrency(reportData.summary.totalExpenses) }}</span>
+          </div>
+        </div>
+
+        <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">ΕΓΓΡΑΦΕΣ ({{ entries.length }})</h3>
+        
+        <div v-if="entries.length > 0" class="space-y-3">
+          <article
+            v-for="entry in entries"
+            :key="entry.id"
+            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4"
+          >
+            <div>
+              <p class="font-semibold text-slate-900">{{ EXPENSE_CATEGORY_LABELS[entry.category as ExpenseCategory] ?? entry.category }}</p>
+              <p class="text-sm text-slate-500">
+                {{ formatEntryDate(entry.date) }}
+                <span v-if="entry.source === 'recurring'" class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">Πάγιο</span>
+                <span v-if="entry.source === 'invoice_payment'" class="ml-2 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">Τιμολόγιο</span>
+              </p>
+            </div>
+            <p class="text-lg font-bold text-rose-600">€ {{ formatCurrency(entry.amount) }}</p>
+          </article>
+        </div>
+
+        <p v-else class="py-8 text-center text-sm text-slate-500">
+          Δεν βρέθηκαν έξοδα για την επιλεγμένη περίοδο.
+        </p>
+      </div>
+    </div>
+
+    <!-- Recurring Tab -->
+    <div v-if="activeTab === 'recurring'" class="space-y-6">
+      <!-- Add Recurring Form -->
+      <div class="rounded-3xl bg-white p-6 shadow-lg">
+        <h3 class="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
+          <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Προσθήκη Πάγιου Εξόδου
+        </h3>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Κατηγορία</label>
+            <select
+              v-model="recurringCategory"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            >
+              <option value="">— Επιλέξτε —</option>
+              <option v-for="(label, key) in manualExpenseCategories" :key="key" :value="key">
+                {{ label }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Ποσό</label>
+            <div class="relative">
+              <input
+                v-model.number="recurringAmount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 pr-12 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">€</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Ημέρα Μήνα (1-28)</label>
+            <select
+              v-model.number="recurringDay"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            >
+              <option v-for="day in 28" :key="day" :value="day">{{ day }}η</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Περιγραφή</label>
+            <input
+              v-model="recurringDescription"
+              type="text"
+              placeholder="π.χ. Μηνιαίο ενοίκιο"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          :disabled="!canSubmitRecurring || isSubmittingRecurring"
+          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 font-semibold text-white shadow-lg shadow-amber-600/30 transition hover:bg-amber-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          @click="submitRecurring"
+        >
+          <svg v-if="isSubmittingRecurring" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          {{ isSubmittingRecurring ? 'Αποθήκευση...' : 'Προσθήκη Πάγιου' }}
+        </button>
+      </div>
+
+      <!-- Recurring List -->
+      <div class="rounded-3xl bg-white p-6 shadow-lg">
+        <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">ΕΝΕΡΓΑ ΠΑΓΙΑ ΕΞΟΔΑ</h3>
+
+        <div v-if="isLoadingRecurring" class="py-8 text-center text-sm text-slate-500">
+          Φόρτωση...
+        </div>
+
+        <div v-else-if="recurringExpenses.length > 0" class="space-y-3">
+          <article
+            v-for="rec in recurringExpenses"
+            :key="rec.id"
+            class="flex items-center justify-between rounded-xl border p-4"
+            :class="rec.isActive ? 'border-slate-100 bg-slate-50' : 'border-slate-200 bg-slate-100 opacity-60'"
+          >
+            <div class="flex items-center gap-3">
+              <input
+                type="checkbox"
+                :checked="rec.isActive"
+                class="h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                @change="toggleRecurring(rec)"
+              />
+              <div>
+                <p class="font-semibold text-slate-900">{{ EXPENSE_CATEGORY_LABELS[rec.category] ?? rec.category }}</p>
+                <p class="text-sm text-slate-500">{{ rec.dayOfMonth }}η κάθε μήνα{{ rec.description ? ` • ${rec.description}` : '' }}</p>
+              </div>
+            </div>
+            <p class="text-lg font-bold" :class="rec.isActive ? 'text-amber-600' : 'text-slate-400'">
+              € {{ formatCurrency(rec.amount) }}
+            </p>
+          </article>
+        </div>
+
+        <p v-else class="py-8 text-center text-sm text-slate-500">
+          Δεν υπάρχουν πάγια έξοδα.
+        </p>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+
+import {
+  addFinancialEntry,
+  addRecurringExpense,
+  getFinancialReport,
+  getRecurringExpenses,
+  updateRecurringExpense,
+  EXPENSE_CATEGORY_LABELS,
+  type ExpenseCategory,
+  type FinancialEntry,
+  type FinancialReport,
+  type RecurringExpense,
+} from '@/services/api/financialApi';
+import { formatCurrency } from '@/utils/date';
+
+// Tab state
+const activeTab = ref<'entry' | 'search' | 'recurring'>('entry');
+
+// Manual expense categories (exclude auto-generated ones)
+const manualExpenseCategories: Partial<Record<ExpenseCategory, string>> = {
+  ΡΕΥΜΑ: 'Ρεύμα',
+  ΤΗΛΕΦΩΝΙΑ: 'Τηλεφωνία',
+  ΕΝΟΙΚΙΟ: 'Ενοίκιο',
+  ΜΙΣΘΟΙ: 'Μισθοί',
+  ΛΟΓΙΣΤΗΣ: 'Λογιστής',
+  ΑΛΛΑ: 'Άλλα',
+};
+
+// Entry form state
+const expenseCategory = ref<ExpenseCategory | ''>('');
+const expenseAmount = ref<number | null>(null);
+const expenseDate = ref(new Date().toISOString().split('T')[0]);
+const expenseDescription = ref('');
+const isSubmitting = ref(false);
+const successMessage = ref<string | null>(null);
+const errorMessage = ref<string | null>(null);
+
+// Search state
+const searchStartDate = ref('');
+const searchEndDate = ref('');
+const selectedPeriod = ref('');
+const isSearching = ref(false);
+const hasSearched = ref(false);
+const entries = ref<FinancialEntry[]>([]);
+const reportData = ref<FinancialReport | null>(null);
+
+// Recurring state
+const recurringCategory = ref<ExpenseCategory | ''>('');
+const recurringAmount = ref<number | null>(null);
+const recurringDay = ref(1);
+const recurringDescription = ref('');
+const recurringExpenses = ref<RecurringExpense[]>([]);
+const isLoadingRecurring = ref(false);
+const isSubmittingRecurring = ref(false);
+
+const quickPeriods = [
+  { label: 'Σήμερα', days: 0 },
+  { label: 'Χθες', days: 1 },
+  { label: 'Εβδομάδα', days: 7 },
+  { label: 'Μήνας', days: 30 },
+];
+
+const canSubmitExpense = computed(() => {
+  return expenseCategory.value && expenseAmount.value && expenseAmount.value > 0;
+});
+
+const canSubmitRecurring = computed(() => {
+  return recurringCategory.value && recurringAmount.value && recurringAmount.value > 0;
+});
+
+const isValidRange = computed(() => {
+  return searchStartDate.value && searchEndDate.value && new Date(searchStartDate.value) <= new Date(searchEndDate.value);
+});
+
+const selectQuickPeriod = (period: { label: string; days: number }) => {
+  selectedPeriod.value = period.label;
+  const today = new Date();
+  
+  if (period.days === 0) {
+    searchStartDate.value = today.toISOString().split('T')[0];
+    searchEndDate.value = today.toISOString().split('T')[0];
+  } else if (period.days === 1) {
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    searchStartDate.value = yesterday.toISOString().split('T')[0];
+    searchEndDate.value = yesterday.toISOString().split('T')[0];
+  } else {
+    const start = new Date(today);
+    start.setDate(start.getDate() - period.days);
+    searchStartDate.value = start.toISOString().split('T')[0];
+    searchEndDate.value = today.toISOString().split('T')[0];
+  }
+};
+
+const formatEntryDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const submitExpense = async () => {
+  if (!canSubmitExpense.value || isSubmitting.value) return;
+
+  isSubmitting.value = true;
+  successMessage.value = null;
+  errorMessage.value = null;
+
+  try {
+    await addFinancialEntry({
+      type: 'expense',
+      category: expenseCategory.value as ExpenseCategory,
+      amount: expenseAmount.value!,
+      date: expenseDate.value,
+      description: expenseDescription.value || undefined,
+    });
+
+    successMessage.value = `Καταχωρήθηκε έξοδο € ${formatCurrency(expenseAmount.value!)}`;
+    
+    // Reset form
+    expenseCategory.value = '';
+    expenseAmount.value = null;
+    expenseDescription.value = '';
+  } catch (err) {
+    console.error('Failed to submit expense:', err);
+    errorMessage.value = err instanceof Error ? err.message : 'Αποτυχία καταχώρησης εξόδου';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const searchEntries = async () => {
+  if (!isValidRange.value || isSearching.value) return;
+
+  isSearching.value = true;
+  hasSearched.value = true;
+
+  try {
+    const response = await getFinancialReport({
+      startDate: searchStartDate.value,
+      endDate: searchEndDate.value,
+      type: 'expense',
+    });
+
+    reportData.value = response.data;
+    entries.value = response.data.entries;
+  } catch (err) {
+    console.error('Failed to search entries:', err);
+    entries.value = [];
+    reportData.value = null;
+  } finally {
+    isSearching.value = false;
+  }
+};
+
+const loadRecurringExpenses = async () => {
+  if (isLoadingRecurring.value) return;
+
+  isLoadingRecurring.value = true;
+  try {
+    const response = await getRecurringExpenses();
+    recurringExpenses.value = response.data;
+  } catch (err) {
+    console.error('Failed to load recurring expenses:', err);
+  } finally {
+    isLoadingRecurring.value = false;
+  }
+};
+
+const submitRecurring = async () => {
+  if (!canSubmitRecurring.value || isSubmittingRecurring.value) return;
+
+  isSubmittingRecurring.value = true;
+  try {
+    await addRecurringExpense({
+      category: recurringCategory.value as ExpenseCategory,
+      amount: recurringAmount.value!,
+      dayOfMonth: recurringDay.value,
+      description: recurringDescription.value || undefined,
+    });
+
+    // Reset form and reload list
+    recurringCategory.value = '';
+    recurringAmount.value = null;
+    recurringDescription.value = '';
+    await loadRecurringExpenses();
+  } catch (err) {
+    console.error('Failed to add recurring expense:', err);
+  } finally {
+    isSubmittingRecurring.value = false;
+  }
+};
+
+const toggleRecurring = async (rec: RecurringExpense) => {
+  try {
+    await updateRecurringExpense({
+      recurringId: rec.id,
+      fields: { isActive: !rec.isActive },
+    });
+    // Update local state
+    rec.isActive = !rec.isActive;
+  } catch (err) {
+    console.error('Failed to toggle recurring:', err);
+  }
+};
+</script>
+
+
+

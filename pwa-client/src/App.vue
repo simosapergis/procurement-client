@@ -5,11 +5,14 @@
         <RouterLink to="/" class="app-logo text-base font-semibold text-primary-600 sm:text-lg">MyLogia</RouterLink>
 
         <!-- Desktop Navigation (hidden on mobile) -->
-        <nav v-if="isAuthenticated" class="hidden items-center gap-4 text-sm font-medium text-slate-600 sm:flex">
+        <nav v-if="isAuthenticated" class="hidden items-center gap-3 text-sm font-medium text-slate-600 lg:flex">
           <RouterLink to="/" class="nav-link hover:text-primary-600">Σύνοψη</RouterLink>
           <RouterLink to="/invoices" class="nav-link hover:text-primary-600">Τιμολόγια</RouterLink>
           <RouterLink to="/upload" class="nav-link hover:text-primary-600">Σάρωση</RouterLink>
           <RouterLink to="/suppliers" class="nav-link hover:text-primary-600">Προμηθευτές</RouterLink>
+          <RouterLink to="/income" class="nav-link hover:text-primary-600">Έσοδα</RouterLink>
+          <RouterLink to="/expenses" class="nav-link hover:text-primary-600">Έξοδα</RouterLink>
+          <RouterLink to="/financial-overview" class="nav-link hover:text-primary-600">Οικ. Απεικόνιση</RouterLink>
 
           <!-- Notification Bell (desktop) -->
           <RouterLink
@@ -71,7 +74,7 @@
         </nav>
 
         <!-- Mobile: Right side actions -->
-        <div v-if="isAuthenticated" class="flex items-center gap-1 sm:hidden">
+        <div v-if="isAuthenticated" class="flex items-center gap-1 lg:hidden">
           <!-- Scan/Upload shortcut (mobile) -->
           <RouterLink
             to="/upload"
@@ -126,7 +129,7 @@
       <Transition name="sidebar-backdrop">
         <div
           v-if="sidebarOpen"
-          class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm sm:hidden"
+          class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm lg:hidden"
           @click="sidebarOpen = false"
         />
       </Transition>
@@ -135,7 +138,7 @@
       <Transition name="sidebar">
         <aside
           v-if="sidebarOpen"
-          class="fixed inset-y-0 right-0 z-[70] flex w-72 flex-col bg-white shadow-2xl sm:hidden"
+          class="fixed inset-y-0 right-0 z-[70] flex w-72 flex-col bg-white shadow-2xl lg:hidden"
         >
           <!-- Sidebar Header -->
           <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
@@ -286,11 +289,26 @@ const SuppliersIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: '
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' })
 ]);
 
+const IncomeIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+]);
+
+const ExpensesIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' })
+]);
+
+const FinancialIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' })
+]);
+
 const navLinks = [
   { to: '/', label: 'Σύνοψη', icon: HomeIcon },
   { to: '/invoices', label: 'Τιμολόγια', icon: InvoicesIcon },
   { to: '/upload', label: 'Σάρωση', icon: ScanIcon },
   { to: '/suppliers', label: 'Προμηθευτές', icon: SuppliersIcon },
+  { to: '/income', label: 'Έσοδα', icon: IncomeIcon },
+  { to: '/expenses', label: 'Έξοδα', icon: ExpensesIcon },
+  { to: '/financial-overview', label: 'Οικ. Απεικόνιση', icon: FinancialIcon },
 ];
 
 const userEmail = computed(() => user.value?.email ?? '');

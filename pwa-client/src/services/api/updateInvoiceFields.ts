@@ -25,7 +25,8 @@ export interface UpdateInvoiceFieldsResponse {
   updatedFields?: string[];
 }
 
-const endpoint = import.meta.env.VITE_UPDATE_INVOICE_FIELDS_ENDPOINT ?? '';
+const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
+const UPDATE_INVOICE_FIELDS_PATH = import.meta.env.VITE_UPDATE_INVOICE_FIELDS_PATH ?? 'updateInvoiceFields';
 const auth = getAuth(firebaseApp);
 
 export const updateInvoiceFields = async (
@@ -36,12 +37,12 @@ export const updateInvoiceFields = async (
     throw new Error('Πρέπει να είστε συνδεδεμένος για να ενημερώσετε το τιμολόγιο');
   }
 
-  if (!endpoint) {
-    throw new Error('Το endpoint ενημέρωσης τιμολογίου δεν έχει ρυθμιστεί');
+  if (!BASE_URL) {
+    throw new Error('Δεν έχει οριστεί το base URL για το API');
   }
 
   const token = await user.getIdToken();
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${BASE_URL}${UPDATE_INVOICE_FIELDS_PATH}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
