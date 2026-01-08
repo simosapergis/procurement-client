@@ -20,62 +20,44 @@ const expiryInfo = computed<ExpiryInfo | null>(() => {
   
   if (daysRemaining === null) return null;
 
+  // Already expired (past the invoice month)
   if (daysRemaining < 0) {
-    // Invoice has expired
     return {
       label: 'Έληξε',
       colorClass: 'bg-rose-100 text-rose-700',
     };
   }
 
+  // Expires today (last day of month)
   if (daysRemaining === 0) {
-    // Expires today
     return {
       label: 'Λήγει σήμερα',
       colorClass: 'bg-orange-100 text-orange-700',
     };
   }
 
-  if (daysRemaining <= 7) {
-    // Expires within a week - urgent warning
+  // Only show badge if days remaining <= threshold
+  if (daysRemaining <= INVOICE_EXPIRY_DAYS) {
+    if (daysRemaining <= 7) {
+      // Urgent - within a week
+      return {
+        label: `Λήγει σε ${daysRemaining} ${daysRemaining === 1 ? 'μέρα' : 'μέρες'}`,
+        colorClass: 'bg-amber-100 text-amber-700',
+      };
+    }
+    
+    // More than a week but within threshold
     return {
-      label: `Λήγει σε ${daysRemaining} ${daysRemaining === 1 ? 'μέρα' : 'μέρες'}`,
-      colorClass: 'bg-amber-100 text-amber-700',
+      label: `Λήγει σε ${daysRemaining} μέρες`,
+      colorClass: 'bg-slate-100 text-slate-600',
     };
   }
 
-  if (daysRemaining === INVOICE_EXPIRY_DAYS) {
-    // Just created / full time remaining
-    return {
-      label: `Λήγει σε ${INVOICE_EXPIRY_DAYS} μέρες`,
-      colorClass: 'bg-sky-100 text-sky-700',
-    };
-  }
-
-  // More than a week remaining
-  return {
-    label: `Λήγει σε ${daysRemaining} μέρες`,
-    colorClass: 'bg-slate-100 text-slate-600',
-  };
+  // More days remaining than threshold - don't show badge
+  return null;
 });
 
 const badgeClasses = computed(() =>
   `inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${expiryInfo.value?.colorClass ?? ''}`
 );
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

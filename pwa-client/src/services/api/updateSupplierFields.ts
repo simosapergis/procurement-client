@@ -30,6 +30,7 @@ export interface UpdateSupplierFieldsResponse {
 
 const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
 const UPDATE_SUPPLIER_FIELDS_PATH = import.meta.env.VITE_UPDATE_SUPPLIER_FIELDS_PATH ?? 'updateSupplierFields';
+const endpoint = `${BASE_URL}${UPDATE_SUPPLIER_FIELDS_PATH}`;
 const auth = getAuth(firebaseApp);
 
 export const updateSupplierFields = async (
@@ -45,7 +46,7 @@ export const updateSupplierFields = async (
   }
 
   const token = await user.getIdToken();
-  const response = await fetch(`${BASE_URL}${UPDATE_SUPPLIER_FIELDS_PATH}`, {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

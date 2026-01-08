@@ -31,49 +31,42 @@ export const formatDateTime = (value?: string | Date | { seconds: number }) => {
   }).format(date);
 };
 
-/** Number of days until an invoice is considered expired/due for payment */
-export const INVOICE_EXPIRY_DAYS = parseInt(import.meta.env.VITE_INVOICE_EXPIRY_DAYS, 10) || 30;
-
 /**
- * Checks if an invoice is expired based on the given date
- * @param invoiceDate - The date of the invoice (string, Date, or Firestore timestamp)
- * @returns true if the invoice has exceeded the expiry threshold
+ * Parses a date input into a Date object
  */
-export const isInvoiceExpired = (invoiceDate?: string | Date | { seconds: number }): boolean => {
-  if (!invoiceDate) return false;
-
-  let date: Date;
-  if (typeof invoiceDate === 'object' && 'seconds' in invoiceDate) {
-    date = new Date(invoiceDate.seconds * 1000);
-  } else {
-    date = typeof invoiceDate === 'string' ? new Date(invoiceDate) : invoiceDate;
+const parseDate = (dateInput: string | Date | { seconds: number }): Date => {
+  if (typeof dateInput === 'object' && 'seconds' in dateInput) {
+    return new Date(dateInput.seconds * 1000);
   }
-
-  const today = new Date();
-  const diffTime = today.getTime() - date.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-  return diffDays > INVOICE_EXPIRY_DAYS;
+  return typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
 };
 
+/** Number of days threshold for showing expiry warning */
+export const INVOICE_EXPIRY_DAYS = parseInt(import.meta.env.VITE_INVOICE_EXPIRY_DAYS, 10) || 30;
+
+
 /**
- * Gets the number of days remaining until an invoice expires
+ * Gets the number of days remaining until the end of the invoice's month.
+ * Returns null if no date provided.
+ * Returns negative value if already past the invoice month (expired).
  * @param invoiceDate - The date of the invoice (string, Date, or Firestore timestamp)
- * @returns Number of days remaining (negative if expired)
+ * @returns Number of days until end of invoice month (negative if expired)
  */
 export const getDaysUntilExpiry = (invoiceDate?: string | Date | { seconds: number }): number | null => {
   if (!invoiceDate) return null;
 
-  let date: Date;
-  if (typeof invoiceDate === 'object' && 'seconds' in invoiceDate) {
-    date = new Date(invoiceDate.seconds * 1000);
-  } else {
-    date = typeof invoiceDate === 'string' ? new Date(invoiceDate) : invoiceDate;
-  }
-
+  const date = parseDate(invoiceDate);
   const today = new Date();
-  const diffTime = today.getTime() - date.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  
+  // Get the last day of the invoice's month
+  const invoiceYear = date.getFullYear();
+  const invoiceMonth = date.getMonth();
+  const endOfMonth = new Date(invoiceYear, invoiceMonth + 1, 0, 23, 59, 59, 999);
+  
+  // Calculate difference in days
+  const diffTime = endOfMonth.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  return Math.ceil(INVOICE_EXPIRY_DAYS - diffDays);
+  return diffDays;
 };
+
