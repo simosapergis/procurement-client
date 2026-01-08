@@ -102,7 +102,7 @@ export function useFirestore() {
     const q = query(
       collectionGroup(db, 'invoices'),
       where('paymentStatus', 'in', ['unpaid', 'partially_paid']),
-      //orderBy('uploadedAt', 'desc')
+      orderBy('uploadedAt', 'desc')
     );
     const snapshot = await getDocs(q);
     const invoices = snapshot.docs.map((docSnapshot) => ({
