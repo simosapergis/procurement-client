@@ -7,8 +7,8 @@
         <!-- Desktop Navigation (hidden on mobile) -->
         <nav v-if="isAuthenticated" class="hidden items-center gap-3 text-sm font-medium text-slate-600 lg:flex">
           <RouterLink to="/" class="nav-link hover:text-primary-600">Σύνοψη</RouterLink>
-          <RouterLink to="/invoices" class="nav-link hover:text-primary-600">Τιμολόγια</RouterLink>
           <RouterLink to="/upload" class="nav-link hover:text-primary-600">Σάρωση</RouterLink>
+          <RouterLink to="/invoices" class="nav-link hover:text-primary-600">Τιμολόγια</RouterLink>
           <RouterLink to="/suppliers" class="nav-link hover:text-primary-600">Προμηθευτές</RouterLink>
           <RouterLink to="/income" class="nav-link hover:text-primary-600">Έσοδα</RouterLink>
           <RouterLink to="/expenses" class="nav-link hover:text-primary-600">Έξοδα</RouterLink>
@@ -303,8 +303,8 @@ const FinancialIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: '
 
 const navLinks = [
   { to: '/', label: 'Σύνοψη', icon: HomeIcon },
-  { to: '/invoices', label: 'Τιμολόγια', icon: InvoicesIcon },
   { to: '/upload', label: 'Σάρωση', icon: ScanIcon },
+  { to: '/invoices', label: 'Τιμολόγια', icon: InvoicesIcon },
   { to: '/suppliers', label: 'Προμηθευτές', icon: SuppliersIcon },
   { to: '/income', label: 'Έσοδα', icon: IncomeIcon },
   { to: '/expenses', label: 'Έξοδα', icon: ExpensesIcon },

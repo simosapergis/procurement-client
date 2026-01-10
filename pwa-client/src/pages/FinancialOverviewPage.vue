@@ -25,21 +25,21 @@
       </div>
 
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="mb-2 block text-sm font-medium text-slate-700">Από</label>
+        <div class="flex flex-col items-center">
+          <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Από</label>
           <input
             v-model="startDate"
             type="date"
-            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
             @change="selectedPeriod = 'custom'"
           />
         </div>
-        <div>
-          <label class="mb-2 block text-sm font-medium text-slate-700">Έως</label>
+        <div class="flex flex-col items-center">
+          <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Έως</label>
           <input
             v-model="endDate"
             type="date"
-            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
             @change="selectedPeriod = 'custom'"
           />
         </div>

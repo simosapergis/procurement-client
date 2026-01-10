@@ -46,7 +46,7 @@
 
     <!-- Suppliers Delivering Today -->
     <div v-if="suppliersDeliveringToday.length > 0" class="mb-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-4 shadow-sm">
-      <div class="mb-3 flex items-center gap-2">
+      <div class="mb-3 flex flex-wrap items-center gap-2">
         <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
         </svg>
