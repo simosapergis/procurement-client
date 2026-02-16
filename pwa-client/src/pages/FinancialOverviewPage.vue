@@ -25,21 +25,21 @@
       </div>
 
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col items-center">
-          <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Από</label>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-slate-700">Από</label>
           <input
             v-model="startDate"
             type="date"
-            class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
             @change="selectedPeriod = 'custom'"
           />
         </div>
-        <div class="flex flex-col items-center">
-          <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Έως</label>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-slate-700">Έως</label>
           <input
             v-model="endDate"
             type="date"
-            class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
             @change="selectedPeriod = 'custom'"
           />
         </div>
@@ -48,16 +48,11 @@
       <button
         type="button"
         :disabled="!isValidRange || isLoading"
-        class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-3 font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 py-3 font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:shadow-xl hover:shadow-primary-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         @click="loadReport"
       >
-        <svg v-if="isLoading" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-        <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
+        <Loader2 v-if="isLoading" class="h-5 w-5 animate-spin" />
+        <BarChart3 v-else class="h-5 w-5" />
         {{ isLoading ? 'Φόρτωση...' : 'Εμφάνιση Αναφοράς' }}
       </button>
     </div>
@@ -84,7 +79,7 @@
         <div class="rounded-3xl bg-white p-6 shadow-lg">
           <div class="mb-4 flex items-center justify-between">
             <h3 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
-              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">📈</span>
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600"><TrendingUp class="h-5 w-5" /></span>
               Έσοδα
             </h3>
             <p class="text-2xl font-bold text-emerald-600">€ {{ formatCurrency(reportData.summary.totalIncome) }}</p>
@@ -109,7 +104,7 @@
         <div class="rounded-3xl bg-white p-6 shadow-lg">
           <div class="mb-4 flex items-center justify-between">
             <h3 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
-              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-600">📉</span>
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-600"><TrendingDown class="h-5 w-5" /></span>
               Έξοδα
             </h3>
             <p class="text-2xl font-bold text-rose-600">€ {{ formatCurrency(reportData.summary.totalExpenses) }}</p>
@@ -133,33 +128,48 @@
 
       <!-- Summary Stats -->
       <div class="grid gap-4 sm:grid-cols-3">
-        <div class="rounded-2xl bg-white p-5 shadow-sm">
-          <p class="text-xs uppercase tracking-wide text-slate-400">Σύνολο Εσόδων</p>
-          <p class="mt-1 text-2xl font-bold text-emerald-600">€ {{ formatCurrency(reportData.summary.totalIncome) }}</p>
+        <div class="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <TrendingUp class="h-5 w-5" />
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-slate-400">Σύνολο Εσόδων</p>
+            <p class="mt-0.5 text-xl font-bold text-emerald-600">€ {{ formatCurrency(reportData.summary.totalIncome) }}</p>
+          </div>
         </div>
-        <div class="rounded-2xl bg-white p-5 shadow-sm">
-          <p class="text-xs uppercase tracking-wide text-slate-400">Σύνολο Εξόδων</p>
-          <p class="mt-1 text-2xl font-bold text-rose-600">€ {{ formatCurrency(reportData.summary.totalExpenses) }}</p>
+        <div class="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+            <TrendingDown class="h-5 w-5" />
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-slate-400">Σύνολο Εξόδων</p>
+            <p class="mt-0.5 text-xl font-bold text-rose-600">€ {{ formatCurrency(reportData.summary.totalExpenses) }}</p>
+          </div>
         </div>
-        <div class="rounded-2xl bg-white p-5 shadow-sm">
-          <p class="text-xs uppercase tracking-wide text-slate-400">Αριθμός Εγγραφών</p>
-          <p class="mt-1 text-2xl font-bold text-slate-900">{{ reportData.summary.entryCount }}</p>
+        <div class="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+            <Hash class="h-5 w-5" />
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-slate-400">Αριθμός Εγγραφών</p>
+            <p class="mt-0.5 text-xl font-bold text-slate-900">{{ reportData.summary.entryCount }}</p>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!isLoading" class="rounded-3xl bg-white p-12 text-center shadow-lg">
-      <svg class="mx-auto h-16 w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-      <p class="mt-4 text-slate-500">Επιλέξτε περίοδο και πατήστε "Εμφάνιση Αναφοράς"</p>
+    <div v-else-if="!isLoading" class="rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center shadow-sm">
+      <BarChart3 class="mx-auto h-14 w-14 text-slate-300" :stroke-width="1.5" />
+      <p class="mt-4 text-sm font-medium text-slate-600">Επιλέξτε περίοδο και πατήστε "Εμφάνιση Αναφοράς"</p>
+      <p class="mt-1 text-xs text-slate-400">Η οικονομική σας αναφορά θα εμφανιστεί εδώ</p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { TrendingUp, TrendingDown, BarChart3, Loader2, Search, Hash } from 'lucide-vue-next';
 
 import {
   getFinancialReport,

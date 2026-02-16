@@ -70,9 +70,7 @@
       <Transition name="fade">
         <div v-if="isCollapsed && hasSearched" class="flex items-center justify-between px-6 pt-4">
           <div class="flex items-center gap-2 text-sm text-slate-600">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <Calendar class="h-4 w-4" />
             <span>{{ formatDisplayDate(startDate) }} - {{ formatDisplayDate(endDate) }}</span>
           </div>
           <button
@@ -90,16 +88,11 @@
         <button
           type="button"
           :disabled="!isValidRange || loading"
-          class="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-primary-600 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+          class="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:shadow-xl hover:shadow-primary-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
           @click="searchInvoices"
         >
-          <svg v-if="loading" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Loader2 v-if="loading" class="h-5 w-5 animate-spin" />
+          <SearchIcon v-else class="h-5 w-5" />
           {{ loading ? 'Αναζήτηση...' : 'Αναζήτηση Τιμολογίων' }}
         </button>
       </div>
@@ -155,9 +148,11 @@
         </div>
       </div>
 
-      <p v-else class="py-8 text-center text-sm text-slate-500">
-        Δεν βρέθηκαν τιμολόγια για την επιλεγμένη περίοδο.
-      </p>
+      <div v-else class="py-8 text-center">
+        <FileText class="mx-auto h-12 w-12 text-slate-300" :stroke-width="1.5" />
+        <p class="mt-4 text-sm font-medium text-slate-600">Δεν βρέθηκαν τιμολόγια</p>
+        <p class="mt-1 text-xs text-slate-400">Δοκιμάστε διαφορετική περίοδο αναζήτησης</p>
+      </div>
     </div>
 
     <!-- Invoice Detail Modal -->
@@ -173,6 +168,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { Calendar, Search as SearchIcon, Loader2, FileText } from 'lucide-vue-next';
 
 import InvoiceDetailView from '@/components/InvoiceDetailView.vue';
 import Loader from '@/components/Loader.vue';

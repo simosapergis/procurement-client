@@ -9,47 +9,50 @@
           class="flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 text-sm font-medium text-primary-600 transition hover:bg-primary-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           @click="refreshInvoices"
         >
-          <svg
-            class="h-4 w-4"
-            :class="{ 'animate-spin': loading }"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
           Ανανέωση
         </button>
       </div>
       <p class="mt-1 text-sm text-slate-500">Ανεξόφλητα και μερικώς εξοφλημένα τιμολόγια</p>
     </header>
 
-    <div class="mb-6 grid gap-4 sm:grid-cols-2">
-      <div class="flex rounded-2xl bg-white p-5 shadow-sm">
-        <div class="flex-1">
-          <p class="text-xs tracking-wide text-slate-400">Σύνολο Τιμολογίων</p>
-          <p class="mt-1 text-3xl font-bold text-slate-900">{{ invoices.length }}</p>
+    <div class="mb-6 grid gap-4 sm:grid-cols-3">
+      <div class="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+          <FileText class="h-6 w-6" />
         </div>
-        <div class="flex-1 border-l border-slate-100 pl-5">
-          <p class="text-xs tracking-wide text-slate-400">
-            <span class="supplier-label-full">Σύνολο Προμηθευτών</span>
-            <span class="supplier-label-short">Σύνολο Προμηθευτ.</span>
-          </p>
-          <p class="mt-1 text-3xl font-bold text-slate-900">{{ uniqueSupplierCount }}</p>
+        <div>
+          <p class="text-xs tracking-wide text-slate-400">Τιμολόγια</p>
+          <p class="mt-0.5 text-2xl font-bold text-slate-900">{{ invoices.length }}</p>
         </div>
       </div>
-      <div class="rounded-2xl bg-white p-5 shadow-sm">
-        <p class="text-xs tracking-wide text-slate-400">Σύνολο Υπολοίπων</p>
-        <p class="mt-1 text-3xl font-bold text-slate-900">€ {{ totalAmount }}</p>
+      <div class="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <Building2 class="h-6 w-6" />
+        </div>
+        <div>
+          <p class="text-xs tracking-wide text-slate-400">
+            <span class="supplier-label-full">Προμηθευτές</span>
+            <span class="supplier-label-short">Προμηθευτ.</span>
+          </p>
+          <p class="mt-0.5 text-2xl font-bold text-slate-900">{{ uniqueSupplierCount }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:col-span-1">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <Wallet class="h-6 w-6" />
+        </div>
+        <div>
+          <p class="text-xs tracking-wide text-slate-400">Υπόλοιπα</p>
+          <p class="mt-0.5 text-2xl font-bold text-slate-900">€ {{ totalAmount }}</p>
+        </div>
       </div>
     </div>
 
     <!-- Suppliers Delivering Today -->
     <div v-if="suppliersDeliveringToday.length > 0" class="mb-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-4 shadow-sm">
       <div class="mb-3 flex flex-wrap items-center gap-2">
-        <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
+        <Truck class="h-5 w-5 text-emerald-600" />
         <h3 class="text-sm font-semibold text-emerald-800">Σημερινές Παραδόσεις</h3>
         <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
           {{ suppliersDeliveringToday.length }}
@@ -79,7 +82,7 @@
       <article
         v-for="invoice in invoices"
         :key="invoice.id"
-        class="cursor-pointer rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md"
+        class="cursor-pointer rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99]"
         @click="openDetailModal(invoice)"
       >
         <!-- Mobile Layout -->
@@ -96,12 +99,10 @@
             </div>
             <button
               type="button"
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition active:scale-95"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition hover:bg-primary-100 active:scale-95"
               @click.stop="openPaymentModal(invoice)"
             >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <Wallet class="h-5 w-5" />
             </button>
           </div>
           <!-- Row 2: Amounts -->
@@ -146,9 +147,7 @@
               class="flex h-9 items-center gap-2 rounded-xl bg-primary-50 px-3 text-primary-600 transition hover:bg-primary-100 active:scale-95"
               @click.stop="openPaymentModal(invoice)"
             >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <Wallet class="h-5 w-5" />
               <span class="text-sm font-medium">Πληρωμή</span>
             </button>
           </div>
@@ -156,9 +155,11 @@
       </article>
     </div>
 
-    <p v-if="!loading && invoices.length === 0" class="mt-4 text-sm text-slate-500">
-      Δεν βρέθηκαν ανεξόφλητα τιμολόγια.
-    </p>
+    <div v-if="!loading && invoices.length === 0" class="mt-8 rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
+      <FileText class="mx-auto h-12 w-12 text-slate-300" />
+      <p class="mt-4 text-sm font-medium text-slate-600">Δεν βρέθηκαν ανεξόφλητα τιμολόγια</p>
+      <p class="mt-1 text-xs text-slate-400">Όλα τα τιμολόγιά σας είναι εξοφλημένα</p>
+    </div>
 
     <!-- Invoice Detail Modal -->
     <InvoiceDetailView
@@ -190,6 +191,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { RefreshCw, FileText, Building2, Wallet, Truck } from 'lucide-vue-next';
 
 import ExpiryBadge from '@/components/ExpiryBadge.vue';
 import InvoiceDetailView from '@/components/InvoiceDetailView.vue';

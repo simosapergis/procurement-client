@@ -118,7 +118,7 @@
       </div>
 
       <Loader v-if="isBusy" :label="statusMessage" />
-      <p v-if="error" class="mt-2 text-sm text-rose-600">{{ error }}</p>
+      <p v-if="error" class="mt-2 text-sm text-rose-500">{{ error }}</p>
     </div>
 
     <div class="space-y-4">

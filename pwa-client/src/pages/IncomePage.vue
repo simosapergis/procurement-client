@@ -28,19 +28,17 @@
     <!-- Entry Tab -->
     <div v-if="activeTab === 'entry'" class="rounded-3xl bg-white p-6 shadow-lg">
       <h3 class="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
-        <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
+        <PlusCircle class="h-5 w-5 text-emerald-600" />
         Κλείσιμο Ημέρας
       </h3>
 
       <!-- Date Selector -->
-      <div class="mb-6 flex flex-col items-center">
-        <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Ημερομηνία</label>
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Ημερομηνία</label>
         <input
           v-model="entryDate"
           type="date"
-          class="w-4/5 min-w-0 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
         />
       </div>
 
@@ -48,7 +46,7 @@
       <div class="space-y-4">
         <div class="flex items-center gap-4 rounded-xl bg-slate-50 p-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-            💵
+            <Banknote class="h-5 w-5" />
           </div>
           <div class="flex-1">
             <label class="text-sm font-medium text-slate-700">Μετρητά</label>
@@ -66,7 +64,7 @@
 
         <div class="flex items-center gap-4 rounded-xl bg-slate-50 p-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-            💳
+            <CreditCard class="h-5 w-5" />
           </div>
           <div class="flex-1">
             <label class="text-sm font-medium text-slate-700">Κάρτα</label>
@@ -84,7 +82,7 @@
 
         <div class="flex items-center gap-4 rounded-xl bg-slate-50 p-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-            📋
+            <ClipboardList class="h-5 w-5" />
           </div>
           <div class="flex-1">
             <label class="text-sm font-medium text-slate-700">Άλλα Έσοδα</label>
@@ -113,13 +111,10 @@
       <button
         type="button"
         :disabled="totalIncome === 0 || isSubmitting"
-        class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:shadow-xl hover:shadow-emerald-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         @click="submitIncome"
       >
-        <svg v-if="isSubmitting" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
+        <Loader2 v-if="isSubmitting" class="h-5 w-5 animate-spin" />
         {{ isSubmitting ? 'Καταχώρηση...' : 'Καταχώρηση Εσόδων' }}
       </button>
 
@@ -155,22 +150,22 @@
         </div>
 
         <!-- Custom Date Range -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div class="flex flex-col items-center">
-            <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Από</label>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Από</label>
             <input
               v-model="searchStartDate"
               type="date"
-              class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
               @change="selectedPeriod = 'custom'"
             />
           </div>
-          <div class="flex flex-col items-center">
-            <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Έως</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Έως</label>
             <input
               v-model="searchEndDate"
               type="date"
-              class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
               @change="selectedPeriod = 'custom'"
             />
           </div>
@@ -180,16 +175,11 @@
         <button
           type="button"
           :disabled="!isValidRange || isSearching"
-          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-3 font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:shadow-xl hover:shadow-emerald-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           @click="searchEntries"
         >
-          <svg v-if="isSearching" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Loader2 v-if="isSearching" class="h-5 w-5 animate-spin" />
+          <Search v-else class="h-5 w-5" />
           {{ isSearching ? 'Αναζήτηση...' : 'Αναζήτηση' }}
         </button>
       </div>
@@ -245,6 +235,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { Banknote, CreditCard, ClipboardList, PlusCircle, Search, Loader2 } from 'lucide-vue-next';
 
 import {
   addFinancialEntry,

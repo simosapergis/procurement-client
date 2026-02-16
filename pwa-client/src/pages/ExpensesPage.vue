@@ -36,9 +36,7 @@
     <!-- Entry Tab -->
     <div v-if="activeTab === 'entry'" class="rounded-3xl bg-white p-6 shadow-lg">
       <h3 class="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
-        <svg class="h-5 w-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
+        <PlusCircle class="h-5 w-5 text-rose-600" />
         Καταχώρηση Εξόδου
       </h3>
 
@@ -47,7 +45,7 @@
         <label class="mb-2 block text-sm font-medium text-slate-700">Κατηγορία</label>
         <select
           v-model="expenseCategory"
-          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
         >
           <option value="">— Επιλέξτε κατηγορία —</option>
           <option v-for="(label, key) in manualExpenseCategories" :key="key" :value="key">
@@ -66,19 +64,19 @@
             step="0.01"
             min="0"
             placeholder="0.00"
-            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 pr-12 text-lg font-semibold text-slate-900 transition focus:border-primary-500 focus:outline-none"
+            class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 pr-12 text-lg font-semibold text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
           />
           <span class="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-medium text-slate-400">€</span>
         </div>
       </div>
 
       <!-- Date -->
-      <div class="mb-4 flex flex-col items-center">
-        <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Ημερομηνία</label>
+      <div class="mb-4">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Ημερομηνία</label>
         <input
           v-model="expenseDate"
           type="date"
-          class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
         />
       </div>
 
@@ -89,7 +87,7 @@
           v-model="expenseDescription"
           type="text"
           placeholder="Σημειώσεις..."
-          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
         />
       </div>
 
@@ -97,13 +95,10 @@
       <button
         type="button"
         :disabled="!canSubmitExpense || isSubmitting"
-        class="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-4 text-lg font-semibold text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 py-4 text-lg font-semibold text-white shadow-lg shadow-rose-600/30 transition hover:shadow-xl hover:shadow-rose-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         @click="submitExpense"
       >
-        <svg v-if="isSubmitting" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
+        <Loader2 v-if="isSubmitting" class="h-5 w-5 animate-spin" />
         {{ isSubmitting ? 'Καταχώρηση...' : 'Καταχώρηση' }}
       </button>
 
@@ -138,21 +133,21 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <div class="flex flex-col items-center">
-            <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Από</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Από</label>
             <input
               v-model="searchStartDate"
               type="date"
-              class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
               @change="selectedPeriod = 'custom'"
             />
           </div>
-          <div class="flex flex-col items-center">
-            <label class="mb-2 block w-4/5 text-sm font-medium text-slate-700">Έως</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700">Έως</label>
             <input
               v-model="searchEndDate"
               type="date"
-              class="w-4/5 rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none"
+              class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
               @change="selectedPeriod = 'custom'"
             />
           </div>
@@ -161,16 +156,11 @@
         <button
           type="button"
           :disabled="!isValidRange || isSearching"
-          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-3 font-semibold text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 py-3 font-semibold text-white shadow-lg shadow-rose-600/30 transition hover:shadow-xl hover:shadow-rose-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           @click="searchEntries"
         >
-          <svg v-if="isSearching" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Loader2 v-if="isSearching" class="h-5 w-5 animate-spin" />
+          <Search v-else class="h-5 w-5" />
           {{ isSearching ? 'Αναζήτηση...' : 'Αναζήτηση' }}
         </button>
       </div>
@@ -215,9 +205,7 @@
       <!-- Add Recurring Form -->
       <div class="rounded-3xl bg-white p-6 shadow-lg">
         <h3 class="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
-          <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <RefreshCw class="h-5 w-5 text-amber-600" />
           Προσθήκη Πάγιου Εξόδου
         </h3>
 
@@ -274,13 +262,10 @@
         <button
           type="button"
           :disabled="!canSubmitRecurring || isSubmittingRecurring"
-          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 font-semibold text-white shadow-lg shadow-amber-600/30 transition hover:bg-amber-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 py-3 font-semibold text-white shadow-lg shadow-amber-600/30 transition hover:shadow-xl hover:shadow-amber-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           @click="submitRecurring"
         >
-          <svg v-if="isSubmittingRecurring" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
+          <Loader2 v-if="isSubmittingRecurring" class="h-5 w-5 animate-spin" />
           {{ isSubmittingRecurring ? 'Αποθήκευση...' : 'Προσθήκη Πάγιου' }}
         </button>
       </div>
@@ -328,6 +313,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { PlusCircle, Search, Loader2, RefreshCw } from 'lucide-vue-next';
 
 import {
   addFinancialEntry,

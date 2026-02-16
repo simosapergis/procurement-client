@@ -1,6 +1,6 @@
 <template>
   <article
-    class="cursor-pointer rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.98]"
+    class="cursor-pointer rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]"
     @click="handleClick"
   >
     <!-- Mobile Layout -->
@@ -28,9 +28,7 @@
             class="flex h-8 items-center gap-1.5 rounded-lg bg-primary-50 px-2.5 text-primary-600 transition active:scale-95"
             @click.stop="handlePayment"
           >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+            <Wallet class="h-4 w-4" />
             <span class="text-xs font-medium">Πληρωμή</span>
           </button>
         </div>
@@ -87,9 +85,7 @@
               class="flex h-8 items-center gap-1.5 rounded-lg bg-primary-50 px-2.5 text-primary-600 transition hover:bg-primary-100 active:scale-95"
               @click.stop="handlePayment"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <Wallet class="h-4 w-4" />
               <span class="text-xs font-medium">Πληρωμή</span>
             </button>
           </div>
@@ -106,6 +102,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Wallet } from 'lucide-vue-next';
 
 import StatusBadge from '@/components/StatusBadge.vue';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';

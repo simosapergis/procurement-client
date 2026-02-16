@@ -10,7 +10,7 @@
     />
     <button
       type="button"
-      class="flex w-full items-center justify-center rounded-xl bg-primary-600 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+      class="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:shadow-xl hover:shadow-primary-600/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
       :disabled="disabled"
       @click="openPicker"
     >

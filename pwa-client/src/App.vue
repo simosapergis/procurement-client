@@ -1,31 +1,36 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-100">
-    <header class="sticky top-0 z-50 bg-white shadow-sm">
+    <header class="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg">
       <div class="app-header mx-auto flex max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4">
-        <RouterLink to="/" class="app-logo text-base font-semibold text-primary-600 sm:text-lg">MyLogia</RouterLink>
+        <RouterLink to="/" class="app-logo flex items-center gap-2 text-base font-bold text-primary-600 sm:text-lg">
+          <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-md shadow-primary-500/30">
+            <ReceiptText class="h-4 w-4 text-white" :stroke-width="2.5" />
+          </div>
+          MyLogia
+        </RouterLink>
 
         <!-- Desktop Navigation (hidden on mobile) -->
-        <nav v-if="isAuthenticated" class="hidden items-center gap-3 text-sm font-medium text-slate-600 lg:flex">
-          <RouterLink to="/" class="nav-link hover:text-primary-600">Σύνοψη</RouterLink>
-          <RouterLink to="/upload" class="nav-link hover:text-primary-600">Σάρωση</RouterLink>
-          <RouterLink to="/invoices" class="nav-link hover:text-primary-600">Τιμολόγια</RouterLink>
-          <RouterLink to="/suppliers" class="nav-link hover:text-primary-600">Προμηθευτές</RouterLink>
-          <RouterLink to="/income" class="nav-link hover:text-primary-600">Έσοδα</RouterLink>
-          <RouterLink to="/expenses" class="nav-link hover:text-primary-600">Έξοδα</RouterLink>
-          <RouterLink to="/financial-overview" class="nav-link hover:text-primary-600">Οικ. Απεικόνιση</RouterLink>
-          <RouterLink to="/export-invoices" class="nav-link hover:text-primary-600">Εξαγωγή</RouterLink>
+        <nav v-if="isAuthenticated" class="hidden items-center gap-1 text-sm font-medium text-slate-600 lg:flex">
+          <RouterLink
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
+            class="relative rounded-lg px-3 py-2 transition hover:bg-slate-100 hover:text-primary-600"
+            :class="isActiveRoute(link.to) ? 'bg-primary-50 text-primary-600 font-semibold' : ''"
+          >
+            {{ link.label }}
+            <span v-if="isActiveRoute(link.to)" class="absolute inset-x-2 -bottom-3 h-0.5 rounded-full bg-primary-500" />
+          </RouterLink>
 
           <!-- Notification Bell (desktop) -->
           <RouterLink
             to="/notifications"
-            class="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            class="relative ml-1 flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
+            <Bell class="h-5 w-5" />
             <span
               v-if="unreadCount > 0"
-              class="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white"
+              class="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white"
             >
               {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
@@ -35,7 +40,7 @@
           <div class="relative ml-1">
             <button
               type="button"
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 transition hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition hover:shadow-lg hover:shadow-primary-500/30 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               @click="userMenuOpen = !userMenuOpen"
             >
               {{ userInitial }}
@@ -64,9 +69,7 @@
                   class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50"
                   @click="handleLogout"
                 >
-                  <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
+                  <LogOut class="h-4 w-4 text-slate-400" />
                   Αποσύνδεση
                 </button>
               </div>
@@ -82,10 +85,7 @@
             class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
             :class="{ 'bg-primary-50 text-primary-600': $route.path === '/upload' }"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <Camera class="h-5 w-5" />
           </RouterLink>
 
           <!-- Notification Bell (mobile) -->
@@ -93,9 +93,7 @@
             to="/notifications"
             class="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
+            <Bell class="h-5 w-5" />
             <span
               v-if="unreadCount > 0"
               class="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white"
@@ -110,15 +108,13 @@
             class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
             @click="sidebarOpen = true"
           >
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Menu class="h-6 w-6" />
           </button>
         </div>
 
         <!-- Unauthenticated nav -->
         <nav v-if="!isAuthenticated" class="flex items-center gap-4 text-sm font-medium text-slate-600">
-          <RouterLink to="/login" class="rounded-xl bg-primary-600 px-4 py-2 text-white hover:bg-primary-700">
+          <RouterLink to="/login" class="rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-2.5 font-semibold text-white shadow-md shadow-primary-600/30 transition hover:shadow-lg hover:shadow-primary-600/40 active:scale-[0.98]">
             Σύνδεση
           </RouterLink>
         </nav>
@@ -142,23 +138,26 @@
           class="fixed inset-y-0 right-0 z-[70] flex w-72 flex-col bg-white shadow-2xl lg:hidden"
         >
           <!-- Sidebar Header -->
-          <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <span class="text-lg font-semibold text-primary-600">Μενού</span>
+          <div class="flex items-center justify-between bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-5">
+            <div class="flex items-center gap-2">
+              <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
+                <ReceiptText class="h-4 w-4 text-white" :stroke-width="2.5" />
+              </div>
+              <span class="text-lg font-bold text-white">MyLogia</span>
+            </div>
             <button
               type="button"
-              class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              class="flex h-10 w-10 items-center justify-center rounded-xl text-white/70 transition hover:bg-white/10 hover:text-white"
               @click="sidebarOpen = false"
             >
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X class="h-6 w-6" />
             </button>
           </div>
 
           <!-- User Info -->
           <div class="border-b border-slate-100 px-5 py-4">
             <div class="flex items-center gap-3">
-              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700">
+              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-lg font-semibold text-white shadow-md shadow-primary-500/20">
                 {{ userInitial }}
               </div>
               <div class="min-w-0 flex-1">
@@ -170,29 +169,30 @@
 
           <!-- Navigation Links -->
           <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <p class="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Πλοήγηση</p>
             <RouterLink
               v-for="link in navLinks"
               :key="link.to"
               :to="link.to"
               class="mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              :class="{ 'bg-primary-50 text-primary-600': $route.path === link.to }"
+              :class="{ 'bg-primary-50 text-primary-600 font-semibold': $route.path === link.to }"
               @click="sidebarOpen = false"
             >
               <component :is="link.icon" class="h-5 w-5" />
               {{ link.label }}
             </RouterLink>
 
+            <div class="my-3 h-px bg-slate-100" />
+
             <!-- Notifications link in sidebar -->
             <RouterLink
               to="/notifications"
               class="mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              :class="{ 'bg-primary-50 text-primary-600': $route.path === '/notifications' }"
+              :class="{ 'bg-primary-50 text-primary-600 font-semibold': $route.path === '/notifications' }"
               @click="sidebarOpen = false"
             >
               <div class="relative">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
+                <Bell class="h-5 w-5" />
                 <span
                   v-if="unreadCount > 0"
                   class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500"
@@ -212,9 +212,7 @@
               class="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200 active:scale-[0.98]"
               @click="handleLogout"
             >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <LogOut class="h-5 w-5" />
               Αποσύνδεση
             </button>
           </div>
@@ -226,7 +224,11 @@
     <div v-if="userMenuOpen" class="fixed inset-0 z-40" @click="userMenuOpen = false" />
 
     <main class="mx-auto flex w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
-      <RouterView />
+      <RouterView v-slot="{ Component, route: currentRoute }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" :key="currentRoute.path" />
+        </Transition>
+      </RouterView>
     </main>
 
     <!-- Toast Notifications -->
@@ -235,10 +237,11 @@
         <div
           v-for="toast in toasts"
           :key="toast.id"
-          class="pointer-events-auto max-w-sm rounded-2xl px-5 py-3 text-sm text-white shadow-xl"
+          class="pointer-events-auto flex max-w-sm items-center gap-3 rounded-2xl px-5 py-3 text-sm font-medium text-white shadow-xl"
           :class="toastClasses(toast.type)"
           @click="dismiss(toast.id)"
         >
+          <component :is="toastIcon(toast.type)" class="h-5 w-5 shrink-0" />
           {{ toast.message }}
         </div>
       </transition-group>
@@ -247,15 +250,34 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref, watch } from 'vue';
-import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import {
+  Home,
+  Camera,
+  FileText,
+  Building2,
+  CircleDollarSign,
+  Wallet,
+  BarChart3,
+  Download,
+  Bell,
+  LogOut,
+  Menu,
+  X,
+  ReceiptText,
+  CheckCircle2,
+  XCircle,
+  Info,
+} from 'lucide-vue-next';
 
 import { useNotifications } from '@/composables/useNotifications';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useAuth } from '@/composables/useAuth';
 import { useInvoiceNotifications } from '@/composables/useInvoiceNotifications';
 
+const route = useRoute();
 const router = useRouter();
 const { toasts, dismiss } = useNotifications();
 const notificationStore = useNotificationStore();
@@ -272,50 +294,21 @@ onMounted(() => {
   initializeNotifications();
 });
 
-// Navigation icons as functional components
-const HomeIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' })
-]);
-
-const InvoicesIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' })
-]);
-
-const ScanIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z' }),
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 13a3 3 0 11-6 0 3 3 0 016 0z' })
-]);
-
-const SuppliersIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' })
-]);
-
-const IncomeIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
-]);
-
-const ExpensesIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' })
-]);
-
-const FinancialIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' })
-]);
-
-const ExportIcon = () => h('svg', { class: 'h-5 w-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' })
-]);
-
 const navLinks = [
-  { to: '/', label: 'Σύνοψη', icon: HomeIcon },
-  { to: '/upload', label: 'Σάρωση', icon: ScanIcon },
-  { to: '/invoices', label: 'Τιμολόγια', icon: InvoicesIcon },
-  { to: '/suppliers', label: 'Προμηθευτές', icon: SuppliersIcon },
-  { to: '/income', label: 'Έσοδα', icon: IncomeIcon },
-  { to: '/expenses', label: 'Έξοδα', icon: ExpensesIcon },
-  { to: '/financial-overview', label: 'Οικ. Απεικόνιση', icon: FinancialIcon },
-  { to: '/export-invoices', label: 'Εξαγωγή', icon: ExportIcon },
+  { to: '/', label: 'Σύνοψη', icon: Home },
+  { to: '/upload', label: 'Σάρωση', icon: Camera },
+  { to: '/invoices', label: 'Τιμολόγια', icon: FileText },
+  { to: '/suppliers', label: 'Προμηθευτές', icon: Building2 },
+  { to: '/income', label: 'Έσοδα', icon: CircleDollarSign },
+  { to: '/expenses', label: 'Έξοδα', icon: Wallet },
+  { to: '/financial-overview', label: 'Οικ. Απεικόνιση', icon: BarChart3 },
+  { to: '/export-invoices', label: 'Εξαγωγή', icon: Download },
 ];
+
+const isActiveRoute = (to: string): boolean => {
+  if (to === '/') return route.path === '/';
+  return route.path.startsWith(to);
+};
 
 const userEmail = computed(() => user.value?.email ?? '');
 const userInitial = computed(() => {
@@ -336,20 +329,46 @@ watch(() => router.currentRoute.value.path, () => {
   sidebarOpen.value = false;
 });
 
-
 const toastClasses = (type: string) => {
   switch (type) {
     case 'success':
-      return 'bg-emerald-500/90';
+      return 'bg-emerald-500/90 backdrop-blur-sm';
     case 'error':
-      return 'bg-rose-500/90';
+      return 'bg-rose-500/90 backdrop-blur-sm';
     default:
-      return 'bg-slate-900/90';
+      return 'bg-slate-900/90 backdrop-blur-sm';
+  }
+};
+
+const toastIcon = (type: string) => {
+  switch (type) {
+    case 'success':
+      return CheckCircle2;
+    case 'error':
+      return XCircle;
+    default:
+      return Info;
   }
 };
 </script>
 
 <style scoped>
+/* Page transition */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
 /* Toast animations */
 .toast-enter-active,
 .toast-leave-active {

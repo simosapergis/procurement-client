@@ -6,9 +6,7 @@
       class="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-700"
       @click="goBack"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-      </svg>
+      <ChevronLeft class="h-4 w-4" />
       Προμηθευτές
     </button>
 
@@ -20,28 +18,20 @@
           <h1 class="mt-1 text-2xl font-bold sm:text-3xl">{{ supplier.name }}</h1>
           <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-primary-100">
             <span v-if="supplier.supplierTaxNumber || supplier.id" class="flex items-center gap-1.5">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <FileText class="h-4 w-4" />
               ΑΦΜ: {{ supplier.supplierTaxNumber ?? supplier.id }}
             </span>
             <span v-if="supplier.contactEmail" class="flex items-center gap-1.5">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+              <Mail class="h-4 w-4" />
               {{ supplier.contactEmail }}
             </span>
             <span v-if="supplier.contactPhone" class="flex items-center gap-1.5">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
+              <Phone class="h-4 w-4" />
               {{ supplier.contactPhone }}
             </span>
             <!-- Delivery Info -->
             <span v-if="hasDeliveryInfo" class="flex items-center gap-1.5">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
+              <ArrowLeftRight class="h-4 w-4" />
               Παραδίδει: {{ deliveryDayLabel }}<template v-if="deliveryTimeRange">, {{ deliveryTimeRange }}</template>
             </span>
           </div>
@@ -56,9 +46,7 @@
             aria-label="Επεξεργασία προμηθευτή"
             @click="openSupplierEditModal"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <Pencil class="h-5 w-5" />
           </button>
 
           <!-- Status Badge -->
@@ -94,9 +82,11 @@
           @payment="openPaymentModal"
         />
       </div>
-      <p v-if="!invoiceLoading && invoices.length === 0" class="py-8 text-center text-sm text-slate-500">
-        Δεν βρέθηκαν τιμολόγια για αυτόν τον προμηθευτή.
-      </p>
+      <div v-if="!invoiceLoading && invoices.length === 0" class="py-8 text-center">
+        <FileText class="mx-auto h-12 w-12 text-slate-300" :stroke-width="1.5" />
+        <p class="mt-4 text-sm font-medium text-slate-600">Δεν βρέθηκαν τιμολόγια</p>
+        <p class="mt-1 text-xs text-slate-400">Δεν υπάρχουν τιμολόγια για αυτόν τον προμηθευτή</p>
+      </div>
     </div>
 
     <!-- Invoice Detail Modal -->
@@ -138,6 +128,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { ChevronLeft, FileText, Mail, Phone, ArrowLeftRight, Pencil } from 'lucide-vue-next';
 
 import InvoiceDetailView from '@/components/InvoiceDetailView.vue';
 import InvoicePreviewCard from '@/components/InvoicePreviewCard.vue';
