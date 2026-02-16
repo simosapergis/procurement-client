@@ -277,7 +277,7 @@
                     {{ loadingPdf ? 'Φόρτωση...' : 'Προβολή PDF' }}
                   </button>
                   <span v-else class="text-sm text-slate-400">Δεν υπάρχει αρχείο</span>
-                  <p v-if="pdfError" class="mt-2 text-xs text-red-500">{{ pdfError }}</p>
+                  <p v-if="pdfError" class="mt-2 text-xs text-rose-500">{{ pdfError }}</p>
                 </dd>
               </div>
             </dl>

@@ -25,7 +25,7 @@ export const formatDateTime = (value?: string | Date | { seconds: number }) => {
   }
 
   const date = typeof value === 'string' ? new Date(value) : value;
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat('el-GR', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);

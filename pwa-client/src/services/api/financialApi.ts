@@ -1,7 +1,4 @@
-import { getAuth } from 'firebase/auth';
-import { firebaseApp } from '@/services/firebase';
-
-const auth = getAuth(firebaseApp);
+import { apiRequest, buildUrl } from '@/services/api/apiClient';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -95,48 +92,9 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// API HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-const getAuthToken = async (): Promise<string> => {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Πρέπει να είστε συνδεδεμένος');
-  }
-  return user.getIdToken();
-};
-
-const apiRequest = async <T>(
-  endpoint: string,
-  method: 'GET' | 'POST',
-  body?: unknown
-): Promise<T> => {
-  const token = await getAuthToken();
-  const url = endpoint;
-
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    ...(body && { body: JSON.stringify(body) }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error ?? data.message ?? 'Σφάλμα επικοινωνίας');
-  }
-
-  return data;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
 // API ENDPOINTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
 const ADD_FINANCIAL_ENTRY_PATH = import.meta.env.VITE_ADD_FINANCIAL_ENTRY_PATH ?? 'addFinancialEntry';
 const DELETE_FINANCIAL_ENTRY_PATH = import.meta.env.VITE_DELETE_FINANCIAL_ENTRY_PATH ?? 'deleteFinancialEntry';
 const GET_FINANCIAL_REPORT_PATH = import.meta.env.VITE_GET_FINANCIAL_REPORT_PATH ?? 'getFinancialReport';
@@ -172,8 +130,8 @@ export interface AddFinancialEntryResponse {
 export const addFinancialEntry = async (
   payload: AddFinancialEntryRequest
 ): Promise<AddFinancialEntryResponse> => {
-    return apiRequest<AddFinancialEntryResponse>(
-    `${BASE_URL}${ADD_FINANCIAL_ENTRY_PATH}`,
+  return apiRequest<AddFinancialEntryResponse>(
+    buildUrl(ADD_FINANCIAL_ENTRY_PATH),
     'POST',
     payload
   );
@@ -193,7 +151,7 @@ export const deleteFinancialEntry = async (
   entryId: string
 ): Promise<DeleteFinancialEntryResponse> => {
   return apiRequest<DeleteFinancialEntryResponse>(
-    `${BASE_URL}${DELETE_FINANCIAL_ENTRY_PATH}`,
+    buildUrl(DELETE_FINANCIAL_ENTRY_PATH),
     'POST',
     { entryId }
   );
@@ -219,7 +177,7 @@ export const getFinancialReport = async (
   payload: GetFinancialReportRequest
 ): Promise<GetFinancialReportResponse> => {
   return apiRequest<GetFinancialReportResponse>(
-    `${BASE_URL}${GET_FINANCIAL_REPORT_PATH}`,
+    buildUrl(GET_FINANCIAL_REPORT_PATH),
     'POST',
     payload
   );
@@ -252,7 +210,7 @@ export const addRecurringExpense = async (
   payload: AddRecurringExpenseRequest
 ): Promise<AddRecurringExpenseResponse> => {
   return apiRequest<AddRecurringExpenseResponse>(
-    `${BASE_URL}${ADD_RECURRING_EXPENSE_PATH}`,
+    buildUrl(ADD_RECURRING_EXPENSE_PATH),
     'POST',
     payload
   );
@@ -282,7 +240,7 @@ export const updateRecurringExpense = async (
   payload: UpdateRecurringExpenseRequest
 ): Promise<UpdateRecurringExpenseResponse> => {
   return apiRequest<UpdateRecurringExpenseResponse>(
-    `${BASE_URL}${UPDATE_RECURRING_EXPENSE_PATH}`,
+    buildUrl(UPDATE_RECURRING_EXPENSE_PATH),
     'POST',
     payload
   );
@@ -299,7 +257,7 @@ export interface GetRecurringExpensesResponse {
 
 export const getRecurringExpenses = async (): Promise<GetRecurringExpensesResponse> => {
   return apiRequest<GetRecurringExpensesResponse>(
-    `${BASE_URL}${GET_RECURRING_EXPENSES_PATH}`,
+    buildUrl(GET_RECURRING_EXPENSES_PATH),
     'GET'
   );
 };

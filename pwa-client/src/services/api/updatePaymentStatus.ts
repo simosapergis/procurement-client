@@ -1,6 +1,4 @@
-import { getAuth } from 'firebase/auth';
-
-import { firebaseApp } from '@/services/firebase';
+import { getAuthToken, buildUrl } from '@/services/api/apiClient';
 
 export interface PaymentRequest {
   supplierId: string;
@@ -36,18 +34,12 @@ export class PaymentError extends Error {
   }
 }
 
-const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
 const UPDATE_PAYMENT_STATUS_PATH = import.meta.env.VITE_UPDATE_PAYMENT_STATUS_PATH ?? 'updatePaymentStatus';
-const auth = getAuth(firebaseApp);
 
 export const updatePaymentStatus = async (payload: PaymentRequest): Promise<PaymentResponse> => {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new PaymentError('Πρέπει να είστε συνδεδεμένος για να καταχωρήσετε πληρωμή');
-  }
+  const token = await getAuthToken();
 
-  const token = await user.getIdToken();
-  const response = await fetch(`${BASE_URL}${UPDATE_PAYMENT_STATUS_PATH}`, {
+  const response = await fetch(buildUrl(UPDATE_PAYMENT_STATUS_PATH), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -68,5 +60,3 @@ export const updatePaymentStatus = async (payload: PaymentRequest): Promise<Paym
 
   return response.json();
 };
-
-

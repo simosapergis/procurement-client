@@ -1,7 +1,7 @@
 <template>
   <section class="mx-auto w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
-    <h2 class="text-2xl font-semibold text-slate-900">Sign in</h2>
-    <p class="mb-6 mt-2 text-sm text-slate-500">Use your procurement workspace credentials.</p>
+    <h2 class="text-2xl font-semibold text-slate-900">Σύνδεση</h2>
+    <p class="mb-6 mt-2 text-sm text-slate-500">Χρησιμοποιήστε τα στοιχεία του λογαριασμού σας.</p>
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <label class="block space-y-2 text-sm font-medium text-slate-600">
         Email
@@ -13,7 +13,7 @@
         />
       </label>
       <label class="block space-y-2 text-sm font-medium text-slate-600">
-        Password
+        Κωδικός
         <input
           v-model="state.password"
           type="password"
@@ -22,7 +22,7 @@
         />
       </label>
       <button :disabled="state.loading" type="submit" class="w-full rounded-xl bg-primary-600 px-4 py-3 font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60">
-        {{ state.loading ? 'Signing in...' : 'Continue' }}
+        {{ state.loading ? 'Σύνδεση...' : 'Είσοδος' }}
       </button>
       <p v-if="state.error" class="text-sm text-rose-600">{{ state.error }}</p>
     </form>
@@ -53,11 +53,11 @@ const handleSubmit = async () => {
   state.error = null;
   try {
     await loginWithEmail(state.email, state.password);
-    notifySuccess('Signed in successfully');
+    notifySuccess('Επιτυχής σύνδεση');
     const redirect = (route.query.redirect as string) || '/';
     router.push(redirect);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to sign in';
+    const message = error instanceof Error ? error.message : 'Αδυναμία σύνδεσης';
     state.error = message;
     notifyError(message);
   } finally {

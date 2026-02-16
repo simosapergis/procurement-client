@@ -1,6 +1,4 @@
-import { getAuth } from 'firebase/auth';
-
-import { firebaseApp } from '@/services/firebase';
+import { getAuthToken, buildUrl } from '@/services/api/apiClient';
 
 export interface SignedUrlResponse {
   uploadUrl: string;
@@ -24,23 +22,13 @@ interface SignedUrlRequest {
   folder?: string;
 }
 
-const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
 const SIGNED_UPLOAD_URL_PATH = import.meta.env.VITE_SIGNED_UPLOAD_URL_PATH ?? 'sign/upload';
 const defaultFolder = import.meta.env.VITE_FIREBASE_BUCKET_FOLDER ?? 'uploads';
-const auth = getAuth(firebaseApp);
 
 export const requestSignedUrl = async (payload: SignedUrlRequest): Promise<SignedUrlResponse> => {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('User must be signed in to request uploads');
-  }
+  const token = await getAuthToken();
 
-  const token = await user.getIdToken();
-  if (!BASE_URL) {
-    throw new Error('VITE_BASE_URL is not configured');
-  }
-
-  const response = await fetch(`${BASE_URL}${SIGNED_UPLOAD_URL_PATH}`, {
+  const response = await fetch(buildUrl(SIGNED_UPLOAD_URL_PATH), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,27 +1,55 @@
-# procurement-client
-A smart procurement &amp; invoicing automation platform for small and medium businesses.
+# Procurement Client
 
-# set cors for bucket upload if not set already
-# edit configuration in cors.json - add IP or Host name to enable CORS 
+A smart procurement & invoicing automation platform for small and medium businesses.
+
+## Getting Started
+
+```bash
+cd pwa-client
+npm install
+npm run dev
+```
+
+## Deployment
+
+### Staging (default — 7-day preview channel)
+```bash
+cd pwa-client
+npm run deploy:staging
+```
+
+### Production
+```bash
+cd pwa-client
+npm run deploy:prod
+```
+
+Both scripts run TypeScript type checking and a production build before deploying.
+The production deploy requires explicit confirmation.
+
+### Manual Deploy
+```bash
+cd pwa-client
+npm run build
+firebase deploy --only hosting
+```
+
+### Staging Preview Channel (manual)
+```bash
+firebase hosting:channel:deploy staging --expires 7d
+```
+
+### Switch Firebase Project
+```bash
+firebase use <project-id>
+```
+
+## CORS Configuration
+
+If CORS is not set for the storage bucket:
+```bash
 gsutil cors set cors.json gs://clean-abacus-482115-a1.firebasestorage.app
 gsutil cors get gs://clean-abacus-482115-a1.firebasestorage.app
+```
 
-
-# Deploy to Google Host
-# .1 Build the app
-cd /Users/Shared/side_projects/procurement-client/pwa-client
-npm run build
-
-# .2 deploy
-firebase deploy --only hosting
-
-
-# deploy on a staging env
-firebase hosting:channel:deploy notifications --only hosting
-firebase hosting:channel:deploy notifications --expires 7d
-
-
-
-# new (cloned) project
-firebase projects:list
-firebase use <new project id>
+Edit `cors.json` to add IP or hostname for CORS.

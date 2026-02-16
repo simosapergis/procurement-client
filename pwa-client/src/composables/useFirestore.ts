@@ -6,7 +6,6 @@ import {
   setDoc,
   getDocs,
   getDoc,
-  onSnapshot,
   query,
   orderBy,
   where,
@@ -93,15 +92,6 @@ export function useFirestore() {
     const invoice = { ...(snapshot.data() as Invoice), id: snapshot.id };
     console.info('[Firestore] fetched supplier invoice', invoice.id);
     return invoice;
-  };
-
-  const subscribeToInvoice = (id: string, callback: (invoice: Invoice) => void) => {
-    const invoiceDoc = doc(invoicesRef, id);
-    return onSnapshot(invoiceDoc, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        callback(docSnapshot.data() as Invoice);
-      }
-    });
   };
 
   const fetchUnpaidInvoices = async (): Promise<Invoice[]> => {
@@ -215,6 +205,5 @@ export function useFirestore() {
     fetchInvoicesByInvoiceDate,
     fetchSuppliersDeliveringToday,
     needsDeliveryCacheRefresh,
-    subscribeToInvoice,
   };
 }

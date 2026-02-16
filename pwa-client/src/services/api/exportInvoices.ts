@@ -1,6 +1,4 @@
-import { getAuth } from 'firebase/auth';
-
-import { firebaseApp } from '@/services/firebase';
+import { getAuthToken, buildUrl } from '@/services/api/apiClient';
 
 export interface ExportInvoiceEntry {
   supplierId: string;
@@ -42,18 +40,12 @@ export class ExportError extends Error {
   }
 }
 
-const BASE_URL = import.meta.env.VITE_BASE_URL ?? '';
 const EXPORT_INVOICES_PATH = import.meta.env.VITE_EXPORT_INVOICES_PATH ?? '/exportInvoices_v2';
-const auth = getAuth(firebaseApp);
 
 export const exportInvoices = async (payload: ExportRequest): Promise<ExportResponse> => {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new ExportError('Πρέπει να είστε συνδεδεμένοι για να εξάγετε τιμολόγια');
-  }
+  const token = await getAuthToken();
 
-  const token = await user.getIdToken();
-  const response = await fetch(`${BASE_URL}${EXPORT_INVOICES_PATH}`, {
+  const response = await fetch(buildUrl(EXPORT_INVOICES_PATH), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

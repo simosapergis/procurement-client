@@ -240,6 +240,13 @@ import Loader from '@/components/Loader.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useFirestore, type ExportInvoice } from '@/composables/useFirestore';
 import { useNotifications } from '@/composables/useNotifications';
+import {
+  getAvailableMonths,
+  applyMonth as applyMonthHelper,
+  groupBySupplier,
+  compositeKey,
+  type SupplierGroup,
+} from '@/pages/exportInvoicesHelpers';
 import { exportInvoices } from '@/services/api/exportInvoices';
 
 const route = useRoute();
@@ -267,25 +274,7 @@ const today = new Date();
 const todayStr = today.toISOString().split('T')[0];
 
 // --- Month dropdown options ---
-const monthLabels = [
-  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
-  'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
-  'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
-];
-
-const availableMonths = computed(() => {
-  const currentMonth = today.getMonth(); // 0-based
-  const currentYear = today.getFullYear();
-  return monthLabels.slice(0, currentMonth + 1).map((label, index) => ({
-    label,
-    value: `${currentYear}-${String(index + 1).padStart(2, '0')}`,
-  }));
-});
-
-// --- Helpers ---
-const compositeKey = (invoice: ExportInvoice): string => {
-  return `${invoice.supplierId}/${invoice.id}`;
-};
+const availableMonths = computed(() => getAvailableMonths(today));
 
 const formatDisplayDate = (dateStr: string): string => {
   if (!dateStr) return '';
@@ -311,15 +300,9 @@ const syncQueryParams = () => {
 
 // --- Filter handlers ---
 const applyMonth = (monthValue: string) => {
-  const [year, month] = monthValue.split('-').map(Number);
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDay = new Date(year, month, 0); // last day of the month
-
-  // Cap end date to today
-  const cappedEnd = lastDay > today ? today : lastDay;
-
-  startDate.value = firstDay.toISOString().split('T')[0];
-  endDate.value = cappedEnd.toISOString().split('T')[0];
+  const result = applyMonthHelper(monthValue, today);
+  startDate.value = result.startDate;
+  endDate.value = result.endDate;
 };
 
 const onMonthSelected = () => {
@@ -334,30 +317,7 @@ const onCustomDateChanged = () => {
 };
 
 // --- Grouped invoices ---
-interface SupplierGroup {
-  supplierId: string;
-  supplierName: string;
-  invoices: ExportInvoice[];
-}
-
-const groupedBySupplier = computed<SupplierGroup[]>(() => {
-  const groups: Record<string, SupplierGroup> = {};
-
-  for (const invoice of invoices.value) {
-    const sid = invoice.supplierId;
-    if (!groups[sid]) {
-      groups[sid] = {
-        supplierId: sid,
-        supplierName: invoice.supplierName || sid,
-        invoices: [],
-      };
-    }
-    groups[sid].invoices.push(invoice);
-  }
-
-  // Sort groups alphabetically by supplier name
-  return Object.values(groups).sort((a, b) => a.supplierName.localeCompare(b.supplierName, 'el'));
-});
+const groupedBySupplier = computed<SupplierGroup[]>(() => groupBySupplier(invoices.value));
 
 // --- Selection logic ---
 const isSelected = (invoice: ExportInvoice): boolean => {

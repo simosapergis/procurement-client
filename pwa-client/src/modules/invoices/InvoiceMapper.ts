@@ -18,6 +18,7 @@ export interface Invoice {
   dueDate?: string;
   totalAmount?: number;
   unpaidAmount?: number;
+  paidAmount?: number;
   netAmount?: number;
   vatAmount?: number;
   vatRate?: number;
@@ -38,38 +39,3 @@ export interface Invoice {
   quality: InvoiceQuality;
 }
 
-export interface InvoicePayload extends Partial<Invoice> {
-  id: string;
-}
-
-export const mapInvoice = (payload: InvoicePayload): Invoice => ({
-  id: payload.id,
-  invoiceId: payload.invoiceId ?? payload.id,
-  supplierId: payload.supplierId,
-  supplierName: payload.supplierName ?? 'Unknown supplier',
-  supplierTaxNumber: payload.supplierTaxNumber,
-  supplierNameNormalized: payload.supplierNameNormalized,
-  invoiceNumber: payload.invoiceNumber,
-  invoiceDate: payload.invoiceDate,
-  dueDate: payload.dueDate,
-  totalAmount: payload.totalAmount ?? 0,
-  unpaidAmount: payload.unpaidAmount,
-  netAmount: payload.netAmount,
-  vatAmount: payload.vatAmount,
-  vatRate: payload.vatRate,
-  currency: payload.currency === 'EUR' ? '€' : '$',
-  uploadedBy: payload.uploadedBy,
-  bucket: payload.bucket,
-  rawFilePaths: payload.rawFilePaths ?? [],
-  filePath: payload.filePath,
-  status: payload.status ?? 'processing',
-  paymentStatus: payload.paymentStatus,
-  statusMessage: payload.statusMessage ?? payload.errorMessage ?? 'Queued for extraction',
-  errorMessage: payload.errorMessage ?? null,
-  confidence: payload.confidence ?? null,
-  uploadedAt: payload.uploadedAt ?? new Date().toISOString(),
-  createdAt: payload.createdAt,
-  processedAt: payload.processedAt,
-  quality: payload.quality ?? { score: 0, accepted: false, reasons: [] },
-  fileUrl: payload.fileUrl,
-});
