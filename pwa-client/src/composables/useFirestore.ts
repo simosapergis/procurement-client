@@ -11,11 +11,17 @@ import {
   orderBy,
   where,
   limit,
+  Timestamp,
 } from 'firebase/firestore';
 
 import { firebaseApp } from '@/services/firebase';
 import type { Invoice } from '@/modules/invoices/InvoiceMapper';
 import type { Supplier } from '@/modules/suppliers/Supplier';
+
+export interface ExportInvoice extends Invoice {
+  supplierId: string;
+  downloadedBy: Record<string, { lastDownloadedAt: unknown; downloadCount: number }>;
+}
 
 const db = getFirestore(firebaseApp);
 
@@ -172,6 +178,32 @@ export function useFirestore() {
     return !isCacheFresh();
   };
 
+  /**
+   * Fetch invoices by invoiceDate range (for export page).
+   * Uses collectionGroup to query across all suppliers.
+   * Extracts supplierId from the document reference path and includes downloadedBy.
+   */
+  const fetchInvoicesByInvoiceDate = async (startDate: Date, endDate: Date): Promise<ExportInvoice[]> => {
+    const q = query(
+      collectionGroup(db, 'invoices'),
+      where('invoiceDate', '>=', Timestamp.fromDate(startDate)),
+      where('invoiceDate', '<=', Timestamp.fromDate(endDate)),
+      orderBy('invoiceDate', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    const invoices = snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+      return {
+        ...(data as Invoice),
+        id: docSnapshot.id,
+        supplierId: docSnapshot.ref.parent.parent?.id ?? '',
+        downloadedBy: (data.downloadedBy as ExportInvoice['downloadedBy']) ?? {},
+      };
+    });
+    console.info('[Firestore] fetched invoices by invoiceDate range', invoices.length);
+    return invoices;
+  };
+
   return {
     saveInvoiceRecord,
     fetchInvoices,
@@ -180,6 +212,7 @@ export function useFirestore() {
     fetchSupplierInvoice,
     fetchUnpaidInvoices,
     fetchInvoicesByDateRange,
+    fetchInvoicesByInvoiceDate,
     fetchSuppliersDeliveringToday,
     needsDeliveryCacheRefresh,
     subscribeToInvoice,

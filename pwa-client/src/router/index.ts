@@ -11,6 +11,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/income', name: 'income', component: () => import('@/pages/IncomePage.vue') },
   { path: '/expenses', name: 'expenses', component: () => import('@/pages/ExpensesPage.vue') },
   { path: '/financial-overview', name: 'financial-overview', component: () => import('@/pages/FinancialOverviewPage.vue') },
+  { path: '/export-invoices', name: 'export-invoices', component: () => import('@/pages/ExportInvoicesPage.vue') },
 ];
 
 const router = createRouter({
