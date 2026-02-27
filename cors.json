@@ -4,10 +4,8 @@
     "method": ["GET", "PUT", "POST", "HEAD", "OPTIONS", "DELETE"],
     "origin": [
       "http://localhost:5173",
-      "https://clean-abacus-482115-a1.web.app",
-      "https://clean-abacus-482115-a1.firebaseapp.com",
-      "https://level-approach-479119-b3.web.app",
-      "https://level-approach-479119-b3.firebaseapp.com"
+      "https://forbidden-fruit-invoices.web.app",
+      "https://forbidden-fruit-invoices.firebaseapp.com"
     ],
     "responseHeader": [
       "Content-Type",

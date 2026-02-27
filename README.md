@@ -48,8 +48,8 @@ firebase use <project-id>
 
 If CORS is not set for the storage bucket:
 ```bash
-gsutil cors set cors.json gs://clean-abacus-482115-a1.firebasestorage.app
-gsutil cors get gs://clean-abacus-482115-a1.firebasestorage.app
+gsutil cors set cors.json gs://forbidden-fruit-invoices.firebasestorage.app
+gsutil cors get gs://forbidden-fruit-invoices.firebasestorage.app
 ```
 
 Edit `cors.json` to add IP or hostname for CORS.
