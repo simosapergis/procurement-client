@@ -19,14 +19,14 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Ensure long strings (paths, URLs, IDs) break properly */
+/* Ensure long strings (paths, URLs, IDs) break properly but keep normal words intact */
 dd,
 p,
 span,
 td,
 li {
-  word-break: break-all;
-  overflow-wrap: anywhere;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* Disable touch zoom on iOS */

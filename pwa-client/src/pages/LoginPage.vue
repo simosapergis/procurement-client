@@ -8,12 +8,12 @@
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
               <ReceiptText class="h-5 w-5 text-white" :stroke-width="2.5" />
             </div>
-            <span class="text-xl font-bold text-white">MyLogia</span>
+            <span class="text-xl font-bold text-white">FinLogia</span>
           </div>
-          <p class="mt-6 text-lg font-medium text-primary-100">
+          <p class="mt-6 text-lg font-medium text-primary-100 break-keep">
             Αυτοματοποιήστε τη διαχείριση τιμολογίων και προμηθευτών.
           </p>
-          <p class="mt-2 text-sm text-primary-200/80">
+          <p class="mt-2 text-sm text-primary-200/80 break-keep">
             Σαρώστε, καταχωρήστε και παρακολουθήστε τα οικονομικά σας εύκολα.
           </p>
         </div>
@@ -39,7 +39,7 @@
           <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-md shadow-primary-500/30">
             <ReceiptText class="h-4 w-4 text-white" :stroke-width="2.5" />
           </div>
-          <span class="text-lg font-bold text-primary-600">MyLogia</span>
+          <span class="text-lg font-bold text-primary-600">FinLogia</span>
         </div>
 
         <h2 class="text-2xl font-bold text-slate-900">Σύνδεση</h2>

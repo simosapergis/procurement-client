@@ -1,12 +1,12 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-100">
-    <header class="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg">
+    <header v-if="$route.path !== '/login'" class="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg">
       <div class="app-header mx-auto flex max-w-6xl items-center justify-between px-3 py-3 sm:px-6 sm:py-4">
         <RouterLink to="/" class="app-logo flex items-center gap-2 text-base font-bold text-primary-600 sm:text-lg">
           <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-md shadow-primary-500/30">
             <ReceiptText class="h-4 w-4 text-white" :stroke-width="2.5" />
           </div>
-          MyLogia
+          FinLogia
         </RouterLink>
 
         <!-- Desktop Navigation (hidden on mobile) -->
@@ -143,7 +143,7 @@
               <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20">
                 <ReceiptText class="h-4 w-4 text-white" :stroke-width="2.5" />
               </div>
-              <span class="text-lg font-bold text-white">MyLogia</span>
+              <span class="text-lg font-bold text-white">FinLogia</span>
             </div>
             <button
               type="button"
