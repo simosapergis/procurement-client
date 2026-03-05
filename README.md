@@ -49,6 +49,9 @@ firebase use <project-id>
 If CORS is not set for the storage bucket:
 ```bash
 gsutil cors set cors.json gs://forbidden-fruit-invoices.firebasestorage.app
+gsutil cors set cors.json gs://forbidden-fruit-invoices.appspot.com
+
+gsutil cors get gs://forbidden-fruit-invoices.appspot.com
 gsutil cors get gs://forbidden-fruit-invoices.firebasestorage.app
 ```
 

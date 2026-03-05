@@ -151,3 +151,7 @@ firebase use <project-id>
 - `Supplier` types (including `SupplierDelivery`) are defined in `modules/suppliers/Supplier.ts`.
 - API services use `import.meta.env.VITE_BASE_URL` for the Cloud Functions base — ensure `.env.local` is set up from `.env.example`.
 - The PWA manifest in `vite.config.ts` overrides `public/manifest.webmanifest` at build time.
+
+
+## Prompt Response Format ##
+- Always provide your response in chat starting with "Simo, <your response>"
