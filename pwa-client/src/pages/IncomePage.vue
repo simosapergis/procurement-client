@@ -106,7 +106,16 @@
           <span class="text-2xl font-bold text-emerald-700">€ {{ formatCurrency(totalIncome) }}</span>
         </div>
       </div>
-
+      <!-- Πεδίο για σημειώσεις εσόδου -->
+      <div class="mt-4">
+        <label class="mb-2 block text-sm font-medium text-slate-700">Σημειώσεις (προαιρετικό)</label>
+        <input
+          v-model="incomeDescription"
+          type="text"
+          placeholder="Σημειώσεις..."
+          class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-slate-900 transition focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+        />
+      </div>
       <!-- Submit Button -->
       <button
         type="button"
@@ -215,13 +224,19 @@
           <article
             v-for="entry in entries"
             :key="entry.id"
-            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4"
+            class="flex flex-col rounded-xl border border-slate-100 bg-slate-50 p-4"
           >
-            <div>
-              <p class="font-semibold text-slate-900">{{ INCOME_CATEGORY_LABELS[entry.category as IncomeCategory] ?? entry.category }}</p>
-              <p class="text-sm text-slate-500">{{ formatEntryDate(entry.date) }}</p>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold text-slate-900">{{ INCOME_CATEGORY_LABELS[entry.category as IncomeCategory] ?? entry.category }}</p>
+                <p class="text-sm text-slate-500">{{ formatEntryDate(entry.date) }}</p>
+              </div>
+              <p class="text-lg font-bold text-emerald-600">€ {{ formatCurrency(entry.amount) }}</p>
             </div>
-            <p class="text-lg font-bold text-emerald-600">€ {{ formatCurrency(entry.amount) }}</p>
+            <div v-if="entry.description" class="mt-3 border-t border-slate-200 pt-3">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Σχόλια</p>
+              <p class="mt-1 text-sm text-slate-700">{{ entry.description }}</p>
+            </div>
           </article>
         </div>
 
@@ -255,6 +270,7 @@ const entryDate = ref(new Date().toISOString().split('T')[0]);
 const cashAmount = ref<number | null>(null);
 const cardAmount = ref<number | null>(null);
 const otherAmount = ref<number | null>(null);
+const incomeDescription = ref('');
 const isSubmitting = ref(false);
 const successMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
@@ -318,13 +334,15 @@ const submitIncome = async () => {
   try {
     const promises: Promise<unknown>[] = [];
 
+    const extraDesc = incomeDescription.value.trim();
+
     if (cashAmount.value && cashAmount.value > 0) {
       promises.push(addFinancialEntry({
         type: 'income',
         category: 'cash_sales',
         amount: cashAmount.value,
         date: entryDate.value,
-        description: 'Ημερήσιες πωλήσεις μετρητά',
+        description: extraDesc || undefined,
       }));
     }
 
@@ -334,7 +352,7 @@ const submitIncome = async () => {
         category: 'card_sales',
         amount: cardAmount.value,
         date: entryDate.value,
-        description: 'Ημερήσιες πωλήσεις κάρτα',
+        description: extraDesc || undefined,
       }));
     }
 
@@ -344,7 +362,7 @@ const submitIncome = async () => {
         category: 'other_income',
         amount: otherAmount.value,
         date: entryDate.value,
-        description: 'Άλλα έσοδα',
+        description: extraDesc || undefined,
       }));
     }
 
@@ -356,6 +374,7 @@ const submitIncome = async () => {
     cashAmount.value = null;
     cardAmount.value = null;
     otherAmount.value = null;
+    incomeDescription.value = '';
   } catch (err) {
     console.error('Failed to submit income:', err);
     errorMessage.value = err instanceof Error ? err.message : 'Αποτυχία καταχώρησης εσόδων';
