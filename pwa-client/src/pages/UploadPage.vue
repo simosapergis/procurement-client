@@ -60,7 +60,7 @@
       <input
         ref="galleryInput"
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf"
         multiple
         class="hidden"
         @change="handleGallerySelection"
@@ -169,6 +169,7 @@ const {
   removePage,
   resetQueue,
   setTotalPages,
+  isPdf,
   status,
   error,
   totalPages,
@@ -189,8 +190,16 @@ const handleGallerySelection = async (event: Event) => {
   const files = input.files ? Array.from(input.files) : [];
   if (!files.length) return;
 
-  for (const file of files) {
-    await addPage(file);
+  const pdfFile = files.find((f) => isPdf(f));
+
+  if (pdfFile) {
+    resetQueue();
+    setTotalPages(1);
+    await addPage(pdfFile);
+  } else {
+    for (const file of files) {
+      await addPage(file);
+    }
   }
 
   input.value = '';
@@ -202,6 +211,10 @@ const triggerGalleryPicker = () => {
 };
 
 const handleSelection = async (file: File) => {
+  if (isPdf(file)) {
+    resetQueue();
+    setTotalPages(1);
+  }
   await addPage(file);
 };
 
@@ -216,13 +229,13 @@ const handleTotalPagesInput = (event: Event) => {
 };
 
 const isBusy = computed(() => ['validating', 'uploading'].includes(status.value));
-const canUseGallery = computed(() => canAddPages.value && !isBusy.value);
-const canUseCamera = computed(() => canAddPages.value && !isBusy.value && !useGalleryMode.value);
+const canUseGallery = computed(() => (canAddPages.value || !totalPages.value) && !isBusy.value);
+const canUseCamera = computed(() => (canAddPages.value || !totalPages.value) && !isBusy.value && !useGalleryMode.value);
 const mainActionLabel = computed(() => {
-  if (!canAddPages.value) {
+  if (!canAddPages.value && totalPages.value) {
     return 'Όλες οι σελίδες καταγράφηκαν';
   }
-  return useGalleryMode.value ? 'Επιλογή επόμενης σελίδας' : 'Λήψη επόμενης σελίδας';
+  return 'Επιλογή εικόνας ή PDF';
 });
 
 const statusBadge = computed(() => {

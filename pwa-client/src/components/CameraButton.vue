@@ -3,7 +3,7 @@
     <input
       ref="fileInput"
       type="file"
-      accept="image/*"
+      accept="image/*,application/pdf"
       capture="environment"
       class="hidden"
       @change="handleChange"

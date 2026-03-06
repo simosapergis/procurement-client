@@ -78,6 +78,8 @@ export function useInvoiceUpload() {
     activeInvoiceId.value = null;
   };
 
+  const isPdf = (file: File) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
   const addPage = async (file: File) => {
     if (!totalPages.value) {
       const message = 'Ορίστε τον συνολικό αριθμό σελίδων πριν τη λήψη.';
@@ -95,9 +97,24 @@ export function useInvoiceUpload() {
 
     status.value = 'validating';
     try {
-      const quality = await detectQuality(file);
-      if (!quality.accepted) {
-        throw new Error(quality.reasons[0] ?? 'Ο έλεγχος ποιότητας απέτυχε. Παρακαλώ επαναλάβετε τη λήψη.');
+      const PDF_QUALITY_PASS: ImageQualityReport = {
+        score: 100,
+        status: 'accepted',
+        accepted: true,
+        reasons: [],
+        width: 0,
+        height: 0,
+      };
+
+      let quality: ImageQualityReport;
+
+      if (isPdf(file)) {
+        quality = PDF_QUALITY_PASS;
+      } else {
+        quality = await detectQuality(file);
+        if (!quality.accepted) {
+          throw new Error(quality.reasons[0] ?? 'Ο έλεγχος ποιότητας απέτυχε. Παρακαλώ επαναλάβετε τη λήψη.');
+        }
       }
 
       const pageNumber = pages.value.length + 1;
@@ -218,6 +235,7 @@ export function useInvoiceUpload() {
     completedPages,
     overallProgress,
     hasPendingUploads,
+    isPdf,
     addPage,
     removePage,
     upload,
