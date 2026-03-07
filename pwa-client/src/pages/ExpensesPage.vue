@@ -180,17 +180,29 @@
           <article
             v-for="entry in entries"
             :key="entry.id"
-            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4"
+            class="flex flex-col rounded-xl border border-slate-100 bg-slate-50 p-4"
           >
-            <div>
-              <p class="font-semibold text-slate-900">{{ EXPENSE_CATEGORY_LABELS[entry.category as ExpenseCategory] ?? entry.category }}</p>
-              <p class="text-sm text-slate-500">
-                {{ formatEntryDate(entry.date) }}
-                <span v-if="entry.source === 'recurring'" class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">Πάγιο</span>
-                <span v-if="entry.source === 'invoice_payment'" class="ml-2 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">Τιμολόγιο</span>
-              </p>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold text-slate-900">{{ EXPENSE_CATEGORY_LABELS[entry.category as ExpenseCategory] ?? entry.category }}</p>
+                <p class="text-sm text-slate-500">
+                  {{ formatEntryDate(entry.date) }}
+                  <span v-if="entry.source === 'recurring'" class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">Πάγιο</span>
+                  <span v-if="entry.source === 'invoice_payment'" class="ml-2 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">Τιμολόγιο</span>
+                </p>
+              </div>
+              <p class="text-lg font-bold text-rose-600">€ {{ formatCurrency(entry.amount) }}</p>
             </div>
-            <p class="text-lg font-bold text-rose-600">€ {{ formatCurrency(entry.amount) }}</p>
+            <div v-if="entry.description || entry.createdByName" class="mt-3 border-t border-slate-200 pt-3">
+              <div v-if="entry.description">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Σχόλια</p>
+                <p class="mt-1 text-sm text-slate-700">{{ entry.description }}</p>
+              </div>
+              <div v-if="entry.createdByName" class="flex items-center gap-1.5" :class="entry.description ? 'mt-2' : ''">
+                <User class="h-3.5 w-3.5 text-slate-400" />
+                <p class="text-xs text-slate-400">{{ entry.createdByName }}</p>
+              </div>
+            </div>
           </article>
         </div>
 
@@ -313,7 +325,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { PlusCircle, Search, Loader2, RefreshCw } from 'lucide-vue-next';
+import { PlusCircle, Search, Loader2, RefreshCw, User } from 'lucide-vue-next';
 
 import {
   addFinancialEntry,

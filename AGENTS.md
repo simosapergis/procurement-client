@@ -1,157 +1,151 @@
-# AGENTS.md — Procurement Client
+# AGENTS.md — FinLogia
 
 ## Project Overview
 
-A **procurement and invoicing automation PWA** for Greek small and medium businesses.
+**FinLogia** is a procurement and invoicing automation PWA for Greek small and medium businesses.
 Users scan/upload invoices, manage suppliers, track income/expenses, and generate financial reports.
 
 - **Framework**: Vue 3.4 + TypeScript 5.6 (Composition API with `<script setup lang="ts">` exclusively)
 - **Styling**: Tailwind CSS 3.4 (utility classes only, no component library)
-- **State Management**: Pinia 2.1
-- **Routing**: Vue Router 4.3 (lazy-loaded routes)
+- **Icons**: `lucide-vue-next`
+- **State**: Pinia 2.1
+- **Routing**: Vue Router 4.3 (lazy-loaded routes, `src/router/index.ts`)
 - **Backend**: Firebase 11 (Auth, Firestore, Storage, Cloud Messaging)
 - **Cloud Functions**: europe-west6 region, called via REST with Firebase Auth ID tokens
 - **PWA**: vite-plugin-pwa with Workbox (auto-update, offline support)
-- **Build**: Vite 5
-- **Testing**: Vitest (configured, no test files yet)
+- **Build**: Vite 5 (manual chunks: firebase-app, firebase-auth, firebase-firestore, vue-vendor)
+- **Testing**: Vitest — test files collocated in `__tests__/` dirs
 - **Hosting**: Firebase Hosting
 - **Locale**: Greek UI (`el-GR`), currency formatting with `Intl.NumberFormat('el-GR')`
+- **Path alias**: `@` → `./src` (in `vite.config.ts` and `tsconfig.json`)
+- **Linting**: No ESLint or Prettier configured. Pre-commit: `simple-git-hooks` + `lint-staged`
+
+## Screens
+
+All routes except `/login` require auth (`meta.requiresAuth`). Guard in `router/index.ts` uses `waitForAuthReady()` via `onAuthStateChanged`; unauthenticated users redirect to `/login?redirect=<path>`.
+
+| Path | Page | Description |
+|------|------|-------------|
+| `/` | OverviewPage | Dashboard: unpaid invoices, today's deliveries |
+| `/login` | LoginPage | Email/password auth |
+| `/upload` | UploadPage | Multi-page invoice scan with quality checks |
+| `/invoices` | InvoicesPage | Date-range invoice search, grouped results |
+| `/suppliers` | SuppliersPage | Supplier grid with search |
+| `/suppliers/:id/invoices` | SupplierInvoicesPage | Per-supplier invoices + details + edit |
+| `/notifications` | NotificationsPage | Real-time invoice processing alerts |
+| `/income` | IncomePage | Daily income entry ("Κλείσιμο Ημέρας") + reports |
+| `/expenses` | ExpensesPage | Expense entry + recurring expenses + reports |
+| `/financial-overview` | FinancialOverviewPage | Combined income/expense dashboard |
+| `/export-invoices` | ExportInvoicesPage | Select & export invoices as ZIP |
 
 ## Architecture
 
 ```
 pwa-client/
 ├── src/
-│   ├── main.ts                    # App entry: Pinia, Router, mount, SW registration
-│   ├── App.vue                    # Root layout: header, nav, sidebar, toasts
-│   ├── pages/                     # Route-level page components (*Page.vue)
-│   ├── components/                # Reusable UI components (PascalCase.vue)
-│   ├── composables/               # Composition API hooks (use*.ts)
-│   ├── store/                     # Pinia stores (*Store.ts)
+│   ├── main.ts                 # App entry: Pinia, Router, mount
+│   ├── App.vue                 # Root layout: header, nav, sidebar, toasts
+│   ├── env.d.ts                # TypeScript ambient declarations
+│   ├── registerServiceWorker.ts
+│   ├── router/                 # Route definitions + auth guard
+│   ├── pages/                  # Route-level components (*Page.vue)
+│   ├── components/             # Reusable UI (PascalCase.vue)
+│   ├── composables/            # Composition hooks (use*.ts)
+│   ├── store/                  # Pinia stores (*Store.ts)
 │   ├── services/
-│   │   ├── firebase.ts            # Firebase app initialization
-│   │   ├── notifications.ts       # Pub/sub toast notification bus
-│   │   └── api/                   # REST API service modules (one per endpoint group)
+│   │   ├── firebase.ts         # Firebase app init
+│   │   ├── notifications.ts    # Pub/sub toast bus
+│   │   └── api/                # REST API modules (one per endpoint group)
 │   ├── modules/
-│   │   ├── invoices/              # Invoice domain types and helpers
-│   │   └── suppliers/             # Supplier domain types
-│   ├── utils/                     # Pure utility functions (date, image, file, uuid)
-│   └── assets/styles/             # Global CSS (Tailwind base)
-├── public/                        # Static assets, PWA manifest, Firebase messaging SW
-├── index.html                     # HTML entry point
-├── vite.config.ts                 # Vite + VitePWA configuration
-├── tailwind.config.cjs            # Tailwind theme (custom primary palette)
-├── firebase.json                  # Firebase Hosting config
-└── .firebaserc                    # Firebase project alias
+│   │   ├── invoices/           # Invoice types, UploadFlow, DetectQuality
+│   │   └── suppliers/          # Supplier types
+│   ├── utils/                  # Pure helpers (date, image, file, uuid)
+│   └── assets/styles/          # Global CSS (Tailwind base)
+├── public/                     # Static assets, PWA manifest, messaging SW
+├── index.html
+├── vite.config.ts
+├── tailwind.config.cjs         # primary (indigo) + accent (amber) palettes
+├── tsconfig.json / tsconfig.node.json
+├── postcss.config.cjs
+├── firebase.json               # Hosting config (SPA fallback)
+├── .firebaserc                 # Project: forbidden-fruit-invoices
+└── deploy.sh                   # Runs tests + type-check before deploy
 ```
 
-## Key Conventions
+## Domain Flows
+
+**Invoice Upload**: quality check (`DetectQuality.ts` → `utils/image.ts`) → signed URL (`requestSignedUrl.ts`) → direct PUT to Cloud Storage. Multi-page, sequential. PDF bypasses quality check. Orchestrated by `UploadFlow` class in `modules/invoices/UploadFlow.ts`.
+
+**Notifications**: `onSnapshot` on Firestore `metadata_invoices` → `useInvoiceNotifications` composable → `notificationStore` (Pinia) + `localStorage` (key: `app_notifications`, capped at 100). Toasts bridged via `notifications.ts` pub/sub → `uiStore`.
+
+**Financial**: Income = daily "Κλείσιμο Ημέρας" (cash/card/other). Expenses = one-off + recurring (monthly, day-of-month). Reports = date-range with category breakdowns. All via `financialApi.ts`. Greek category labels: `INCOME_CATEGORY_LABELS`, `EXPENSE_CATEGORY_LABELS`.
+
+## Inventory
+
+- **Components (9)**: CameraButton, ExpiryBadge, InvoiceDetailView, InvoicePreviewCard, Loader, PaymentModal, StatusBadge, SupplierCard, SupplierEditModal
+- **Composables (8)**: useAuth, useFirestore, useInvoiceNotifications, useInvoiceStatus, useInvoiceUpload, useNotifications, useSupplierInvoices, useSuppliers
+- **Stores (5)**: invoiceStore, notificationStore, supplierStore, uiStore, userStore
+- **API services (7)**: apiClient, exportInvoices, financialApi, requestSignedDownloadUrl, requestSignedUrl, updateInvoiceFields, updatePaymentStatus, updateSupplierFields
+
+## Conventions
 
 ### File Naming
-- Pages: `*Page.vue` (e.g., `OverviewPage.vue`, `InvoicesPage.vue`)
-- Components: `PascalCase.vue` (e.g., `InvoicePreviewCard.vue`, `StatusBadge.vue`)
-- Composables: `use*.ts` (e.g., `useAuth.ts`, `useFirestore.ts`)
-- Stores: `*Store.ts` (e.g., `invoiceStore.ts`, `userStore.ts`)
+- Pages: `*Page.vue` — Components: `PascalCase.vue` — Composables: `use*.ts` — Stores: `*Store.ts`
 - API services: descriptive camelCase (e.g., `updatePaymentStatus.ts`, `financialApi.ts`)
+- Tests: collocated `__tests__/*.test.ts` next to source
 
 ### Vue Components
-- Always use `<script setup lang="ts">` — no Options API
-- Props via `defineProps<{...}>()`
-- Emits via `defineEmits<{...}>()`
-- Template first, then script, then scoped styles
+- Always `<script setup lang="ts">` — no Options API
+- Props via `defineProps<{...}>()`, emits via `defineEmits<{...}>()`
+- Order: template → script → scoped styles
 
 ### API Calls
-- All API calls go through `src/services/api/apiClient.ts` (shared auth + fetch wrapper)
-- Firebase Auth ID token is attached as `Authorization: Bearer <token>`
-- Base URL and endpoint paths are configured via `VITE_*` env vars
+- New services **must** use `apiRequest` from `services/api/apiClient.ts` (shared auth + fetch wrapper)
+- `apiRequest` attaches `Authorization: Bearer <token>` via `getAuthToken()` (Firebase Auth)
+- Legacy services using direct `fetch`: requestSignedUrl, requestSignedDownloadUrl, updatePaymentStatus, exportInvoices
+- Base URL and endpoint paths configured via `VITE_*` env vars
 - Error messages are in Greek
 
 ### Firestore Structure
-- `invoices` — top-level invoice collection
-- `suppliers` — top-level supplier collection
-- `suppliers/{supplierId}/invoices` — per-supplier invoice sub-collection
-- `metadata_invoices` — invoice processing metadata (used for notifications)
-- Cross-supplier queries use `collectionGroup('invoices')`
+- `invoices` — top-level collection
+- `suppliers` — top-level collection
+- `suppliers/{supplierId}/invoices` — per-supplier sub-collection
+- `metadata_invoices` — invoice processing metadata (notifications)
+- Cross-supplier queries: `collectionGroup('invoices')`
 
 ### Styling
 - Tailwind utility classes only; no inline styles
-- Custom primary color palette (indigo-based) defined in `tailwind.config.cjs`
-- Rounded corners: `rounded-xl` for small elements, `rounded-2xl`/`rounded-3xl` for cards
-- Shadows: `shadow-sm` for subtle, `shadow-lg` for prominent elements
+- Palettes in `tailwind.config.cjs`: `primary` (indigo), `accent` (amber)
+- Rounded: `rounded-xl` small, `rounded-2xl`/`rounded-3xl` cards
+- Shadows: `shadow-sm` subtle, `shadow-lg` prominent
 - Responsive: mobile-first, `sm:` and `lg:` breakpoints
 
-## Environment Variables
+## Environment & Config
 
-All variables are prefixed with `VITE_` and accessed via `import.meta.env`.
-
-### Firebase Config
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-- `VITE_FIREBASE_MEASUREMENT_ID`
-- `VITE_FIREBASE_BUCKET_FOLDER` — upload folder in Cloud Storage (default: `uploads`)
-
-### App Config
-- `VITE_INVOICE_EXPIRY_DAYS` — days until invoice expiry warning (default: `30`)
-
-### API Endpoints
-- `VITE_BASE_URL` — Cloud Functions base URL (e.g., `https://europe-west6-<project>.cloudfunctions.net`)
-- `VITE_SIGNED_UPLOAD_URL_PATH`
-- `VITE_SIGNED_DOWNLOAD_URL_PATH`
-- `VITE_UPDATE_INVOICE_FIELDS_PATH`
-- `VITE_UPDATE_PAYMENT_STATUS_PATH`
-- `VITE_UPDATE_SUPPLIER_FIELDS_PATH`
-- `VITE_ADD_FINANCIAL_ENTRY_PATH`
-- `VITE_DELETE_FINANCIAL_ENTRY_PATH`
-- `VITE_GET_FINANCIAL_REPORT_PATH`
-- `VITE_ADD_RECURRING_EXPENSE_PATH`
-- `VITE_UPDATE_RECURRING_EXPENSE_PATH`
-- `VITE_GET_RECURRING_EXPENSES_PATH`
-- `VITE_EXPORT_INVOICES_PATH`
+All `VITE_`-prefixed, accessed via `import.meta.env`. Full list in `.env.example`.
+- `VITE_FIREBASE_BUCKET_FOLDER` — Cloud Storage upload folder (default: `uploads`)
+- `VITE_INVOICE_EXPIRY_DAYS` — days until expiry warning (default: `7`)
+- `VITE_BASE_URL` — Cloud Functions base (e.g., `https://europe-west6-<project>.cloudfunctions.net`)
+- Firebase config vars (`API_KEY`, `AUTH_DOMAIN`, `PROJECT_ID`, etc.) + 12 endpoint path vars
 
 ## Deployment
 
-### Production
+`deploy.sh` runs tests (`vitest run`) and type-check (`vue-tsc --noEmit`) before building.
 ```bash
 cd pwa-client
-./deploy.sh production
+./deploy.sh production   # Production deploy (with confirmation)
+./deploy.sh staging      # 7-day Firebase preview channel
 ```
 
-### Staging (7-day preview channel)
-```bash
-cd pwa-client
-./deploy.sh staging
-```
+## Gotchas
 
-### Manual
-```bash
-cd pwa-client
-npm run build
-firebase deploy --only hosting
-```
+- All user-facing strings must be in Greek.
+- `formatCurrency` lives in `utils/date.ts` (historical).
+- `Invoice` interface: `modules/invoices/InvoiceMapper.ts` — canonical type used everywhere.
+- `Supplier` types (incl. `SupplierDelivery`): `modules/suppliers/Supplier.ts`.
+- Ensure `.env.local` is set up from `.env.example` before running.
+- PWA manifest in `vite.config.ts` overrides `public/manifest.webmanifest` at build time.
+- `exportInvoicesHelpers.ts` lives in `pages/` (convention exception).
 
-### Staging Preview Channel
-```bash
-firebase hosting:channel:deploy staging --expires 7d
-```
-
-### Switch Firebase Project
-```bash
-firebase use <project-id>
-```
-
-## Common Gotchas
-
-- The app UI is entirely in Greek. All user-facing strings should be in Greek.
-- `formatCurrency` lives in `utils/date.ts` (historical; may move to `utils/format.ts` later).
-- The `Invoice` interface is defined in `modules/invoices/InvoiceMapper.ts` and is the canonical type used everywhere.
-- `Supplier` types (including `SupplierDelivery`) are defined in `modules/suppliers/Supplier.ts`.
-- API services use `import.meta.env.VITE_BASE_URL` for the Cloud Functions base — ensure `.env.local` is set up from `.env.example`.
-- The PWA manifest in `vite.config.ts` overrides `public/manifest.webmanifest` at build time.
-
-
-## Prompt Response Format ##
+## Prompt Response Format
 - Always provide your response in chat starting with "Simo, <your response>"

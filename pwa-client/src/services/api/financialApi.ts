@@ -29,6 +29,7 @@ export interface FinancialEntry {
   source: EntrySource;
   isDeleted: boolean;
   createdBy: string;
+  createdByName?: string;
   createdAt: { _seconds: number };
   metadata?: {
     invoiceId?: string;

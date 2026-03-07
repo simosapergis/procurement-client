@@ -233,9 +233,15 @@
               </div>
               <p class="text-lg font-bold text-emerald-600">€ {{ formatCurrency(entry.amount) }}</p>
             </div>
-            <div v-if="entry.description" class="mt-3 border-t border-slate-200 pt-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Σχόλια</p>
-              <p class="mt-1 text-sm text-slate-700">{{ entry.description }}</p>
+            <div v-if="entry.description || entry.createdByName" class="mt-3 border-t border-slate-200 pt-3">
+              <div v-if="entry.description">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Σχόλια</p>
+                <p class="mt-1 text-sm text-slate-700">{{ entry.description }}</p>
+              </div>
+              <div v-if="entry.createdByName" class="flex items-center gap-1.5" :class="entry.description ? 'mt-2' : ''">
+                <User class="h-3.5 w-3.5 text-slate-400" />
+                <p class="text-xs text-slate-400">{{ entry.createdByName }}</p>
+              </div>
             </div>
           </article>
         </div>
@@ -250,7 +256,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Banknote, CreditCard, ClipboardList, PlusCircle, Search, Loader2 } from 'lucide-vue-next';
+import { Banknote, CreditCard, ClipboardList, PlusCircle, Search, Loader2, User } from 'lucide-vue-next';
 
 import {
   addFinancialEntry,
