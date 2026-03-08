@@ -1,5 +1,6 @@
 node_modules/
 dist/
+invoice_samples/
 .DS_Store
 *.log
 *.local
