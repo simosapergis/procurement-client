@@ -158,6 +158,14 @@
                 </dd>
               </div>
 
+              <!-- Uploaded By (read-only) -->
+              <div v-if="invoice.uploadedByName" class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+                <dt class="text-xs uppercase tracking-wide text-slate-400">ΚΑΤΑΧΩΡΗΘΗΚΕ ΑΠΟ</dt>
+                <dd class="mt-1 text-lg font-semibold text-slate-900">
+                  {{ invoice.uploadedByName }}
+                </dd>
+              </div>
+
               <!-- Total Amount -->
               <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                 <dt class="text-xs uppercase tracking-wide text-slate-400">ΣΥΝΟΛΙΚΟ ΠΟΣΟ</dt>

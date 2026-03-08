@@ -32,6 +32,7 @@ export interface Invoice {
   createdAt?: string;
   processedAt?: string;
   uploadedBy?: string;
+  uploadedByName?: string;
   bucket?: string;
   rawFilePaths?: string[];
   filePath?: string;
