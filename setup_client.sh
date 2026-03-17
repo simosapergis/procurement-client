@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Client PWA Deployment Script
+# Automates deploying the FinLogia PWA for a new customer:
+#   1. Lists Firebase projects so you can pick a project ID
+#   2. Creates a git branch for the client
+#   3. Writes .env.local, .env.example, .firebaserc from pasted config JSON
+#   4. Builds and deploys to Firebase Hosting
+#
+# Usage: ./setup_client.sh
+# Resumable — safe to re-run if a step fails partway through.
+# ─────────────────────────────────────────────────────────────────────────────
+
+REGION="europe-west3"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PWA_DIR="${SCRIPT_DIR}/pwa-client"
+
+# ─── Colors & helpers ─────────────────────────────────────────────────────────
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
+success() { echo -e "${GREEN}[OK]${NC} $1"; }
+warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
+error()   { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
+
+CURRENT_STEP=""
+handle_error() {
+  local line_no=$1
+  local cmd=$2
+  echo ""
+  echo -e "${RED}──────────────────────────────────────────────────────${NC}"
+  echo -e "${RED}[FAILED]${NC} Step: ${CURRENT_STEP:-unknown}"
+  echo -e "${RED}[FAILED]${NC} Line: ${line_no}"
+  echo -e "${RED}[FAILED]${NC} Command: ${cmd}"
+  echo -e "${RED}──────────────────────────────────────────────────────${NC}"
+  echo ""
+  echo -e "Fix the issue and re-run ${BLUE}./setup_client.sh${NC} — completed steps will be skipped."
+}
+trap 'handle_error ${LINENO} "${BASH_COMMAND}"' ERR
+
+# ─── Prerequisites ────────────────────────────────────────────────────────────
+
+for cmd in firebase node jq git; do
+  if ! command -v "$cmd" &>/dev/null; then
+    error "'${cmd}' is required but not found. Please install it first."
+  fi
+done
+
+# ─── Input: Project ID ───────────────────────────────────────────────────────
+
+info "Fetching Firebase projects..."
+echo ""
+firebase projects:list
+echo ""
+
+read -rp "Enter the Project ID to deploy: " PROJECT_ID
+[[ -z "$PROJECT_ID" ]] && error "Project ID cannot be empty."
+
+info "Selected project: ${PROJECT_ID}"
+
+# ─── Resumability primitives ─────────────────────────────────────────────────
+
+STATE_FILE="${SCRIPT_DIR}/.setup_state_${PROJECT_ID}"
+touch "$STATE_FILE"
+
+mark_step_done() { echo "$1" >> "$STATE_FILE"; }
+is_step_done()   { grep -q "^$1$" "$STATE_FILE" 2>/dev/null; }
+
+# ─── Input: Firebase config JSON (only if config steps are pending) ──────────
+
+CONFIG_NEEDED=false
+for step in update_env_local update_env_example update_firebaserc; do
+  if ! is_step_done "$step"; then
+    CONFIG_NEEDED=true
+    break
+  fi
+done
+
+if $CONFIG_NEEDED; then
+  echo ""
+  info "Paste the Firebase config JSON below, then press Enter on an empty line to finish:"
+  echo ""
+  CONFIG_JSON=""
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && break
+    CONFIG_JSON+="$line"
+  done
+
+  if ! echo "$CONFIG_JSON" | jq empty 2>/dev/null; then
+    error "Invalid JSON. Please check the config and try again."
+  fi
+
+  API_KEY=$(echo "$CONFIG_JSON" | jq -r '.apiKey // empty')
+  AUTH_DOMAIN=$(echo "$CONFIG_JSON" | jq -r '.authDomain // empty')
+  CONFIG_PROJECT_ID=$(echo "$CONFIG_JSON" | jq -r '.projectId // empty')
+  STORAGE_BUCKET=$(echo "$CONFIG_JSON" | jq -r '.storageBucket // empty')
+  MESSAGING_SENDER_ID=$(echo "$CONFIG_JSON" | jq -r '.messagingSenderId // empty')
+  APP_ID=$(echo "$CONFIG_JSON" | jq -r '.appId // empty')
+
+  for field in API_KEY AUTH_DOMAIN CONFIG_PROJECT_ID STORAGE_BUCKET MESSAGING_SENDER_ID APP_ID; do
+    if [[ -z "${!field}" ]]; then
+      error "Missing required field in config JSON. Could not extract: ${field}"
+    fi
+  done
+
+  if [[ "$CONFIG_PROJECT_ID" != "$PROJECT_ID" ]]; then
+    error "Config projectId '${CONFIG_PROJECT_ID}' does not match selected project '${PROJECT_ID}'."
+  fi
+
+  CLIENT_SLUG="${PROJECT_ID#finlogia-}"
+  VITE_CLIENT_NAME=$(echo "$CLIENT_SLUG" | tr '-' ' ' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
+  BASE_URL="https://${REGION}-${PROJECT_ID}.cloudfunctions.net"
+
+  success "Config parsed — project: ${PROJECT_ID}, client name: ${VITE_CLIENT_NAME}"
+else
+  info "Config steps already completed. Skipping config input."
+  # Re-read from existing .env.local for create_branch step (needed for resumability)
+  if [ -f "${PWA_DIR}/.env.local" ]; then
+    PROJECT_ID=$(grep '^VITE_FIREBASE_PROJECT_ID=' "${PWA_DIR}/.env.local" | sed 's/^VITE_FIREBASE_PROJECT_ID=//' | tr -d '"')
+  fi
+fi
+
+# ─── Step 1: Write .env.local (before checkout so post-checkout hook passes) ───
+
+CURRENT_STEP="update_env_local"
+if is_step_done "update_env_local"; then
+  info ".env.local already updated. Skipping..."
+else
+  info "Writing pwa-client/.env.local..."
+  cat > "${PWA_DIR}/.env.local" <<EOF
+# Auto-generated by setup_client.sh for ${PROJECT_ID}
+VITE_FIREBASE_API_KEY="${API_KEY}"
+VITE_FIREBASE_AUTH_DOMAIN="${AUTH_DOMAIN}"
+VITE_FIREBASE_PROJECT_ID="${PROJECT_ID}"
+VITE_FIREBASE_STORAGE_BUCKET="${STORAGE_BUCKET}"
+VITE_FIREBASE_MESSAGING_SENDER_ID="${MESSAGING_SENDER_ID}"
+VITE_FIREBASE_APP_ID="${APP_ID}"
+VITE_FIREBASE_MEASUREMENT_ID=""
+VITE_FIREBASE_BUCKET_FOLDER="uploads"
+VITE_INVOICE_EXPIRY_DAYS=7
+
+# Cloud Functions endpoints
+VITE_BASE_URL=${BASE_URL}
+VITE_SIGNED_UPLOAD_URL_PATH=/getSignedUploadUrl_v2
+VITE_SIGNED_DOWNLOAD_URL_PATH=/getSignedDownloadUrl_v2
+VITE_UPDATE_INVOICE_FIELDS_PATH=/updateInvoiceFields_v2
+VITE_UPDATE_PAYMENT_STATUS_PATH=/updatePaymentStatus_v2
+VITE_UPDATE_SUPPLIER_FIELDS_PATH=/updateSupplierFields_v2
+VITE_ADD_FINANCIAL_ENTRY_PATH=/addFinancialEntry_v2
+VITE_DELETE_FINANCIAL_ENTRY_PATH=/deleteFinancialEntry_v2
+VITE_GET_FINANCIAL_REPORT_PATH=/getFinancialReport_v2
+VITE_ADD_RECURRING_EXPENSE_PATH=/addRecurringExpense_v2
+VITE_UPDATE_RECURRING_EXPENSE_PATH=/updateRecurringExpense_v2
+VITE_GET_RECURRING_EXPENSES_PATH=/getRecurringExpenses_v2
+VITE_EXPORT_INVOICES_PATH=/exportInvoices_v2
+
+VITE_CLIENT_NAME=${VITE_CLIENT_NAME}
+EOF
+  success ".env.local written."
+  mark_step_done "update_env_local"
+fi
+
+# ─── Step 3: Write .env.example ───────────────────────────────────────────────
+
+CURRENT_STEP="update_env_example"
+if is_step_done "update_env_example"; then
+  info ".env.example already updated. Skipping..."
+else
+  info "Writing pwa-client/.env.example..."
+  cat > "${PWA_DIR}/.env.example" <<EOF
+# Copy to .env.local and fill in your project-specific secrets
+VITE_FIREBASE_API_KEY="${API_KEY}"
+VITE_FIREBASE_AUTH_DOMAIN="${AUTH_DOMAIN}"
+VITE_FIREBASE_PROJECT_ID="${PROJECT_ID}"
+VITE_FIREBASE_STORAGE_BUCKET="${STORAGE_BUCKET}"
+VITE_FIREBASE_MESSAGING_SENDER_ID="${MESSAGING_SENDER_ID}"
+VITE_FIREBASE_APP_ID="${APP_ID}"
+VITE_FIREBASE_MEASUREMENT_ID=""
+VITE_FIREBASE_BUCKET_FOLDER="uploads"
+VITE_INVOICE_EXPIRY_DAYS=7
+
+# Cloud Functions endpoints
+VITE_BASE_URL=${BASE_URL}
+VITE_SIGNED_UPLOAD_URL_PATH=/getSignedUploadUrl_v2
+VITE_SIGNED_DOWNLOAD_URL_PATH=/getSignedDownloadUrl_v2
+VITE_UPDATE_INVOICE_FIELDS_PATH=/updateInvoiceFields_v2
+VITE_UPDATE_PAYMENT_STATUS_PATH=/updatePaymentStatus_v2
+VITE_UPDATE_SUPPLIER_FIELDS_PATH=/updateSupplierFields_v2
+VITE_ADD_FINANCIAL_ENTRY_PATH=/addFinancialEntry_v2
+VITE_DELETE_FINANCIAL_ENTRY_PATH=/deleteFinancialEntry_v2
+VITE_GET_FINANCIAL_REPORT_PATH=/getFinancialReport_v2
+VITE_ADD_RECURRING_EXPENSE_PATH=/addRecurringExpense_v2
+VITE_UPDATE_RECURRING_EXPENSE_PATH=/updateRecurringExpense_v2
+VITE_GET_RECURRING_EXPENSES_PATH=/getRecurringExpenses_v2
+VITE_EXPORT_INVOICES_PATH=/exportInvoices_v2
+EOF
+  success ".env.example written."
+  mark_step_done "update_env_example"
+fi
+
+# ─── Step 4: Write .firebaserc ────────────────────────────────────────────────
+
+CURRENT_STEP="update_firebaserc"
+if is_step_done "update_firebaserc"; then
+  info ".firebaserc already updated. Skipping..."
+else
+  info "Writing pwa-client/.firebaserc..."
+  cat > "${PWA_DIR}/.firebaserc" <<EOF
+{
+  "projects": {
+    "default": "${PROJECT_ID}"
+  }
+}
+EOF
+  success ".firebaserc written."
+  mark_step_done "update_firebaserc"
+fi
+
+# ─── Step 2: Create / switch to branch (after .env.local so post-checkout passes) ─
+
+CURRENT_STEP="create_branch"
+if is_step_done "create_branch"; then
+  info "Branch '${PROJECT_ID}' already created. Ensuring we're on it..."
+  SETUP_CLIENT_SKIP_HOOK=1 git checkout "$PROJECT_ID"
+else
+  info "Creating branch '${PROJECT_ID}'..."
+  if git show-ref --verify --quiet "refs/heads/${PROJECT_ID}"; then
+    SETUP_CLIENT_SKIP_HOOK=1 git checkout "$PROJECT_ID"
+    warn "Branch '${PROJECT_ID}' already existed. Switched to it."
+  else
+    SETUP_CLIENT_SKIP_HOOK=1 git checkout -b "$PROJECT_ID"
+  fi
+  success "On branch '${PROJECT_ID}'."
+  mark_step_done "create_branch"
+fi
+
+# ─── Step 5: Set active Firebase project (always runs) ────────────────────────
+
+CURRENT_STEP="set_firebase_project"
+info "Setting active Firebase project to '${PROJECT_ID}'..."
+(cd "$PWA_DIR" && firebase use "$PROJECT_ID")
+success "Firebase project set."
+
+# ─── Step 6: npm install ──────────────────────────────────────────────────────
+
+CURRENT_STEP="npm_install"
+if is_step_done "npm_install"; then
+  info "npm install already done. Skipping..."
+else
+  info "Running npm install in pwa-client/..."
+  (cd "$PWA_DIR" && npm install)
+  success "npm install complete."
+  mark_step_done "npm_install"
+fi
+
+# ─── Step 7: npm build ────────────────────────────────────────────────────────
+
+CURRENT_STEP="npm_build"
+if is_step_done "npm_build"; then
+  info "Build already done. Skipping..."
+else
+  info "Building production bundle..."
+  (cd "$PWA_DIR" && npm run build)
+  success "Build complete."
+  mark_step_done "npm_build"
+fi
+
+# ─── Step 8: Deploy to Firebase Hosting ───────────────────────────────────────
+
+CURRENT_STEP="deploy_hosting"
+if is_step_done "deploy_hosting"; then
+  info "Hosting already deployed. Skipping..."
+else
+  info "Deploying to Firebase Hosting..."
+  (cd "$PWA_DIR" && firebase deploy --only hosting)
+  success "Hosting deployed!"
+  mark_step_done "deploy_hosting"
+fi
+
+# ─── Done ─────────────────────────────────────────────────────────────────────
+
+CURRENT_STEP=""
+echo ""
+success "Client '${PROJECT_ID}' fully deployed!"
+echo -e "   ${BLUE}URL:${NC} https://${PROJECT_ID}.web.app"
+echo ""

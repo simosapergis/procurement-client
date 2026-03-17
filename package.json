@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "scripts": {
+    "setup:client": "bash setup_client.sh"
+  },
+  "devDependencies": {
+    "simple-git-hooks": "^2.11.1",
+    "lint-staged": "^15.2.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged --config package.json",
+    "post-checkout": "bash scripts/post-checkout.sh \"$1\" \"$2\" \"$3\""
+  },
+  "lint-staged": {
+    "pwa-client/**/*.{ts,vue}": "bash -c 'cd pwa-client && npx vitest run'"
+  }
+}
